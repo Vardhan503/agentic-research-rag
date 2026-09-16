@@ -14,6 +14,22 @@ corpus:
   require_open_access: true
   require_full_text: true
 
+discovery:
+  candidate_target: 15000
+  per_page: 100
+  max_results_per_query: 2000
+  request_delay_seconds: 0.1
+  raw_output:
+    data/raw/metadata/discovery_raw.jsonl
+
+  unique_output:
+    data/interim/candidates_unique.jsonl
+
+  report_output:
+    data/interim/discovery_report.json
+
+
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
