@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Raw data
+data/raw/metadata/*
+!data/raw/metadata/.gitkeep
+
+data/raw/content/*
+!data/raw/content/.gitkeep
+
+# Intermediate data
+data/interim/*
+!data/interim/.gitkeep
+
+# Processed datasets
+data/processed/papers/*
+!data/processed/papers/.gitkeep
+
+data/processed/chunks/*
+!data/processed/chunks/.gitkeep
+
+# Benchmark artifacts
+data/benchmark/*
+!data/benchmark/.gitkeep
+
+# Vector / lexical indexes
+indexes/*
+!indexes/.gitkeep
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

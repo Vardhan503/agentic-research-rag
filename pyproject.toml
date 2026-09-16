@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "agentic-research-rag"
+version = "0.1.0"
+description = "Production-grade Agentic RAG system over scientific research papers"
+requires-python = ">=3.11"
+
+dependencies = [
+    "requests>=2.32",
+    "python-dotenv>=1.0",
+    "PyYAML>=6.0",
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
