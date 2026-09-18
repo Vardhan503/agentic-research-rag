@@ -31,7 +31,7 @@ def main():
     discovery_config = config["discovery"]
 
     if args.test:
-        candidate_target = 300
+        candidate_target = 15000
         max_results_per_query = 50
 
         raw_output = (
