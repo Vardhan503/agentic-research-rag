@@ -28,7 +28,24 @@ discovery:
   report_output:
     data/interim/discovery_report.json
 
+selection:
+  retain_score: 8
+  ambiguous_score: 4
 
+  require_abstract: false
+  require_downloadable_content: false
+
+  retained_output:
+    data/processed/corpus_selected.jsonl
+
+  ambiguous_output:
+    data/interim/corpus_ambiguous.jsonl
+
+  rejected_output:
+    data/interim/corpus_rejected.jsonl
+
+  report_output:
+    data/interim/selection_report.json
 
 domain:
   name: "Agentic Retrieval-Augmented Generation"
