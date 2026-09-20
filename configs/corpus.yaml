@@ -15,9 +15,9 @@ corpus:
   require_full_text: true
 
 discovery:
-  candidate_target: 15000
+  candidate_target: 30000
   per_page: 100
-  max_results_per_query: 2000
+  max_results_per_query: 1500
   request_delay_seconds: 0.1
   raw_output:
     data/raw/metadata/discovery_raw.jsonl
@@ -52,18 +52,20 @@ domain:
 
   search_queries:
     - "retrieval augmented generation"
+    - "corrective retrieval augmented generation"
+    - "self reflective retrieval augmented generation"
+    - "adaptive retrieval augmented generation"
+    - "agentic retrieval"
+    - "retrieval grounding"
+    - "hallucination detection large language models"
+    - "citation verification large language models"
+    - "large language model agents"
+    - "query rewriting retrieval"
+    - "multi hop question answering"
+    - "open domain question answering"
     - "dense retrieval"
     - "sparse retrieval"
     - "hybrid retrieval"
     - "neural information retrieval"
     - "retrieval reranking"
     - "cross encoder reranking"
-    - "multi hop question answering"
-    - "open domain question answering"
-    - "query rewriting retrieval"
-    - "large language model agents"
-    - "agentic retrieval"
-    - "retrieval grounding"
-    - "hallucination detection"
-    - "citation verification"
-    - "self correcting retrieval"
