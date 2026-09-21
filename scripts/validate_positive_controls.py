@@ -1,8 +1,10 @@
 import argparse
 from pathlib import Path
 
-import yaml
-
+from agentic_rag.config import (
+    PROJECT_ROOT,
+    load_corpus_config,
+)
 from agentic_rag.processing.ollama_grader import (
     create_ollama_client,
     grade_paper,
@@ -26,15 +28,13 @@ POSITIVE_TITLE_TERMS = [
 ]
 
 
-def load_grading_config(config_path):
-    with open(
-        config_path,
-        "r",
-        encoding="utf-8",
-    ) as config_file:
-        config = yaml.safe_load(config_file)
+def resolve_project_path(path_value):
+    path = Path(path_value)
 
-    return config["ollama_grading"]
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+
+    return path
 
 
 def title_matches(title):
@@ -56,6 +56,7 @@ def collect_positive_candidates(paths, limit):
 
         for paper in papers:
             title = paper.get("title") or ""
+
             normalized_title = " ".join(
                 title.lower().split()
             )
@@ -67,6 +68,7 @@ def collect_positive_candidates(paths, limit):
                 continue
 
             candidate = dict(paper)
+
             candidate["_validation_source"] = str(
                 input_path
             )
@@ -85,7 +87,11 @@ def parse_arguments():
 
     parser.add_argument(
         "--config",
-        default="configs/corpus.yaml",
+        default=None,
+        help=(
+            "Corpus configuration path. "
+            "Defaults to configs/corpus.yaml."
+        ),
     )
 
     parser.add_argument(
@@ -100,14 +106,35 @@ def parse_arguments():
 def main():
     arguments = parse_arguments()
 
-    grading_config = load_grading_config(
-        Path(arguments.config)
+    config = load_corpus_config(
+        arguments.config
+    )
+
+    grading_config = config[
+        "ollama_grading"
+    ]
+
+    selection_config = config[
+        "selection"
+    ]
+
+    retained_path = resolve_project_path(
+        selection_config["retained_output"]
+    )
+
+    ambiguous_path = resolve_project_path(
+        selection_config["ambiguous_output"]
     )
 
     input_paths = [
-        Path("data/interim/corpus_retained.jsonl"),
-        Path("data/interim/corpus_ambiguous.jsonl"),
+        retained_path,
+        ambiguous_path,
     ]
+
+    print("Searching positive controls in:")
+
+    for input_path in input_paths:
+        print("-", input_path)
 
     candidates = collect_positive_candidates(
         input_paths,
@@ -115,7 +142,10 @@ def main():
     )
 
     if not candidates:
-        print("No positive-control candidates found.")
+        print(
+            "\nNo positive-control candidates "
+            "were found in the configured files."
+        )
         return
 
     client = create_ollama_client(
