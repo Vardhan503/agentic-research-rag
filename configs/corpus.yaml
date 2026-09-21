@@ -28,41 +28,6 @@ discovery:
   report_output:
     data/interim/discovery_report.json
 
-# llm_grading:
-#   provider: ollama
-#   model: "qwen3:4b-instruct"
-#   temperature: 0
-
-#   context_window: 8192
-#   batch_size: 8
-#   max_abstract_characters: 2000
-
-#   max_retries: 3
-#   retry_delay_seconds: 2
-
-#   input:
-#     data/interim/corpus_ambiguous.jsonl
-
-#   graded_output:
-#     data/interim/ambiguous_graded.jsonl
-
-#   accepted_output:
-#     data/interim/ambiguous_accepted.jsonl
-
-#   review_output:
-#     data/interim/ambiguous_review.jsonl
-
-#   rejected_output:
-#     data/interim/ambiguous_rejected.jsonl
-
-#   checkpoint_output:
-#     data/interim/ambiguous_grading_checkpoint.json
-
-#   final_corpus_output:
-#     data/processed/final_corpus.jsonl
-
-#   report_output:
-#     data/interim/llm_grading_report.json
 
 selection:
   retain_score: 8
@@ -83,15 +48,40 @@ selection:
   report_output:
     data/interim/selection_report.json
 
+ollama_screening:
+  model: "qwen3:14b"
+  host: "http://localhost:11434"
+
+  # Twenty papers are sent in one request. Only title and the first
+  # 400 abstract characters are included.
+  batch_size: 20
+  preview_characters: 400
+  context_window: 8192
+  num_predict: 120
+  timeout_seconds: 300
+  max_retries: 3
+  retry_delay_seconds: 3
+  keep_alive: "30m"
+
+  input_path: "data/interim/corpus_ambiguous.jsonl"
+
+  # Papers already present here bypass screening.
+  existing_graded_path: "data/interim/ambiguous_graded.jsonl"
+
+  decisions_output_path: "data/interim/ambiguous_screening_decisions.jsonl"
+  shortlist_output_path: "data/interim/ambiguous_screened_shortlist.jsonl"
+  rejected_output_path: "data/interim/ambiguous_screened_rejected.jsonl"
+  report_path: "data/interim/ambiguous_screening_report.json"
+
 ollama_grading:
   model: "qwen3:14b"
   host: "http://localhost:11434"
 
-  # One paper is sent in each request. batch_size controls how often
-  # progress is printed; it does not combine abstracts into one prompt.
+  # One shortlisted paper is sent in each request.
   batch_size: 10
   context_window: 8192
-  max_abstract_characters: 6000
+  max_abstract_characters: 2500
+  num_predict: 120
   timeout_seconds: 300
   max_retries: 3
   retry_delay_seconds: 3
@@ -100,7 +90,7 @@ ollama_grading:
   accepted_min_score: 0.80
   rejected_max_score: 0.39
 
-  input_path: "data/interim/corpus_ambiguous.jsonl"
+  input_path: "data/interim/ambiguous_screened_shortlist.jsonl"
   graded_output_path: "data/interim/ambiguous_graded.jsonl"
   accepted_output_path: "data/interim/ambiguous_accepted.jsonl"
   review_output_path: "data/interim/ambiguous_review.jsonl"
@@ -108,17 +98,7 @@ ollama_grading:
   checkpoint_path: "data/interim/ambiguous_grading_checkpoint.json"
   report_path: "data/interim/llm_grading_report.json"
   selection_report_path: "data/interim/selection_report.json"
-
-final_corpus:
-  manual_approved_input:
-    data/interim/ambiguous_manual_approved.jsonl
-
-  output:
-    data/processed/final_corpus.jsonl
-
-  report_output:
-    data/interim/final_corpus_report.json
-    
+  
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 

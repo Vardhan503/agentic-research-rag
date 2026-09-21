@@ -46,3 +46,14 @@ def load_ollama_grading_config(config_path=None):
         )
 
     return config["ollama_grading"]
+
+def load_ollama_screening_config(config_path=None):
+    config = load_corpus_config(config_path)
+
+    if "ollama_screening" not in config:
+        raise KeyError(
+            "Missing 'ollama_screening' section in "
+            + str(resolve_config_path(config_path))
+        )
+
+    return config["ollama_screening"]

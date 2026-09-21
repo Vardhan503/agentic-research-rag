@@ -4,7 +4,7 @@ import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-
+from agentic_rag.processing.ollama_grader import paper_key
 
 def read_jsonl(path):
     records = []
@@ -262,6 +262,90 @@ def count_content(final_records):
         "papers_with_abstract": with_abstract,
     }
 
+def measure_ambiguous_pipeline(
+    ambiguous_records,
+    graded_records,
+    screening_records,
+    shortlist_records,
+):
+    ambiguous_keys = set()
+    graded_keys = set()
+    screened_keys = set()
+    shortlist_keys = set()
+
+    for paper in ambiguous_records:
+        ambiguous_keys.add(
+            paper_key(paper)
+        )
+
+    for paper in graded_records:
+        graded_keys.add(
+            paper_key(paper)
+        )
+
+    for paper in screening_records:
+        screened_keys.add(
+            paper_key(paper)
+        )
+
+    for paper in shortlist_records:
+        shortlist_keys.add(
+            paper_key(paper)
+        )
+
+    resolved_keys = graded_keys.union(
+        screened_keys
+    )
+
+    screening_complete = (
+        ambiguous_keys.issubset(
+            resolved_keys
+        )
+    )
+
+    shortlist_grading_complete = (
+        shortlist_keys.issubset(
+            graded_keys
+        )
+    )
+
+    pipeline_complete = (
+        screening_complete
+        and shortlist_grading_complete
+    )
+
+    return {
+        "ambiguous_candidates": len(
+            ambiguous_keys
+        ),
+        "ambiguous_graded": len(
+            ambiguous_keys.intersection(
+                graded_keys
+            )
+        ),
+        "ambiguous_screened": len(
+            ambiguous_keys.intersection(
+                screened_keys
+            )
+        ),
+        "screening_shortlist": len(
+            shortlist_keys
+        ),
+        "shortlist_graded": len(
+            shortlist_keys.intersection(
+                graded_keys
+            )
+        ),
+        "screening_complete": (
+            screening_complete
+        ),
+        "shortlist_grading_complete": (
+            shortlist_grading_complete
+        ),
+        "pipeline_complete": (
+            pipeline_complete
+        ),
+    }
 
 def assemble_final_corpus(
     config,
@@ -272,6 +356,11 @@ def assemble_final_corpus(
     grading_config = config[
         "ollama_grading"
     ]
+
+    screening_config = config[
+        "ollama_screening"
+    ]
+
     final_config = config["final_corpus"]
 
     retained_path = resolve_project_path(
@@ -287,6 +376,24 @@ def assemble_final_corpus(
     graded_path = resolve_project_path(
         grading_config["graded_output_path"],
         project_root,
+    )
+
+    screening_decisions_path = (
+        resolve_project_path(
+            screening_config[
+                "decisions_output_path"
+            ],
+            project_root,
+        )
+    )
+
+    screening_shortlist_path = (
+        resolve_project_path(
+            screening_config[
+                "shortlist_output_path"
+            ],
+            project_root,
+        )
     )
 
     accepted_path = resolve_project_path(
@@ -329,6 +436,14 @@ def assemble_final_corpus(
 
     graded_records = read_jsonl(
         graded_path
+    )
+
+    screening_records = read_jsonl(
+        screening_decisions_path
+    )
+
+    shortlist_records = read_jsonl(
+        screening_shortlist_path
     )
 
     sources = [
@@ -422,18 +537,18 @@ def assemble_final_corpus(
         output_path,
     )
 
-    ambiguous_total = len(
-        ambiguous_records
+    pipeline_status = (
+        measure_ambiguous_pipeline(
+            ambiguous_records,
+            graded_records,
+            screening_records,
+            shortlist_records,
+        )
     )
 
-    ambiguous_graded = len(
-        graded_records
-    )
-
-    grading_complete = (
-        ambiguous_graded
-        >= ambiguous_total
-    )
+    grading_complete = pipeline_status[
+        "pipeline_complete"
+    ]
 
     target_papers = int(
         corpus_config["target_papers"]
@@ -458,11 +573,40 @@ def assemble_final_corpus(
         "ambiguous_grading_complete": (
             grading_complete
         ),
+        "screening_complete": (
+            pipeline_status[
+                "screening_complete"
+            ]
+        ),
+        "shortlist_grading_complete": (
+            pipeline_status[
+                "shortlist_grading_complete"
+            ]
+        ),
         "ambiguous_candidates": (
-            ambiguous_total
+            pipeline_status[
+                "ambiguous_candidates"
+            ]
         ),
         "ambiguous_graded": (
-            ambiguous_graded
+            pipeline_status[
+                "ambiguous_graded"
+            ]
+        ),
+        "ambiguous_screened": (
+            pipeline_status[
+                "ambiguous_screened"
+            ]
+        ),
+        "screening_shortlist": (
+            pipeline_status[
+                "screening_shortlist"
+            ]
+        ),
+        "shortlist_graded": (
+            pipeline_status[
+                "shortlist_graded"
+            ]
         ),
         "input_counts": input_counts,
         "accepted_by_source": dict(

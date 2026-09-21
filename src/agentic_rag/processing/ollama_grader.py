@@ -181,7 +181,7 @@ def grade_paper(paper, client, grading_config):
                     "temperature": 0,
                     "seed": 42,
                     "num_ctx": grading_config["context_window"],
-                    "num_predict": 220,
+                    "num_predict": grading_config["num_predict"],
                 },
                 think=False,
                 stream=False,
@@ -386,8 +386,19 @@ def grade_ambiguous_corpus(grading_config, limit=None):
     if limit is not None:
         candidates = candidates[:limit]
 
+    selected_keys = set()
+
+    for paper in candidates:
+        selected_keys.add(paper_key(paper))
+
     processed_keys = load_processed_keys(
         grading_config["graded_output_path"]
+    )
+
+    completed_selected = len(
+        selected_keys.intersection(
+            processed_keys
+        )
     )
 
     client = create_ollama_client(grading_config)
@@ -416,26 +427,27 @@ def grade_ambiguous_corpus(grading_config, limit=None):
 
         processed_keys.add(key)
         newly_graded += 1
+        completed_selected += 1
 
         if newly_graded % grading_config["batch_size"] == 0:
             print(
                 "Newly graded:",
                 newly_graded,
-                "| Total completed:",
-                len(processed_keys),
-                "| Selected:",
+                "| Shortlist completed:",
+                completed_selected,
+                "| Shortlist selected:",
                 len(candidates),
             )
 
             write_checkpoint(
                 grading_config,
-                len(processed_keys),
+                completed_selected,
                 len(candidates),
             )
 
     write_checkpoint(
         grading_config,
-        len(processed_keys),
+        completed_selected,
         len(candidates),
     )
 

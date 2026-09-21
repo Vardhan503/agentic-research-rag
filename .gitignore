@@ -37,7 +37,8 @@ data/interim/*
 # Processed datasets
 data/processed/papers/*
 !data/processed/papers/.gitkeep
-
+data/processed/*.json
+data/processed/*.jsonl
 data/processed/chunks/*
 !data/processed/chunks/.gitkeep
 
