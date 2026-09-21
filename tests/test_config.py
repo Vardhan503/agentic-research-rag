@@ -15,3 +15,13 @@ def test_domain_queries_exist():
     queries = config["domain"]["search_queries"]
 
     assert len(queries) > 0
+
+
+def test_ollama_grading_config_paths():
+    from agentic_rag.config import load_ollama_grading_config
+
+    grading_config = load_ollama_grading_config()
+
+    assert grading_config["model"] == "qwen3:14b"
+    assert grading_config["input_path"] == "data/interim/corpus_ambiguous.jsonl"
+    assert grading_config["graded_output_path"].endswith("ambiguous_graded.jsonl")

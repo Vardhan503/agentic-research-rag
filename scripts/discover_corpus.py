@@ -10,9 +10,7 @@ from agentic_rag.ingestion.discovery import (
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description="Discover research papers from OpenAlex."
-    )
+    parser = argparse.ArgumentParser(description="Discover research papers from OpenAlex.")
 
     parser.add_argument(
         "--test",
@@ -31,60 +29,37 @@ def main():
     discovery_config = config["discovery"]
 
     if args.test:
-        candidate_target = 15000
+        candidate_target = 300
         max_results_per_query = 50
 
-        raw_output = (
-            "data/raw/metadata/"
-            "discovery_test_raw.jsonl"
-        )
+        raw_output = "data/raw/metadata/discovery_test_raw.jsonl"
 
-        unique_output = (
-            "data/interim/"
-            "candidates_test_unique.jsonl"
-        )
+        unique_output = "data/interim/candidates_test_unique.jsonl"
 
-        report_output = (
-            "data/interim/"
-            "discovery_test_report.json"
-        )
+        report_output = "data/interim/discovery_test_report.json"
 
         print()
         print("TEST MODE")
 
     else:
-        candidate_target = discovery_config[
-            "candidate_target"
-        ]
+        candidate_target = discovery_config["candidate_target"]
 
-        max_results_per_query = (
-            discovery_config[
-                "max_results_per_query"
-            ]
-        )
+        max_results_per_query = discovery_config["max_results_per_query"]
 
-        raw_output = discovery_config[
-            "raw_output"
-        ]
+        raw_output = discovery_config["raw_output"]
 
-        unique_output = discovery_config[
-            "unique_output"
-        ]
+        unique_output = discovery_config["unique_output"]
 
-        report_output = discovery_config[
-            "report_output"
-        ]
+        report_output = discovery_config["report_output"]
 
         print()
         print("FULL DISCOVERY MODE")
 
-    discovery_result = (
-        discover_raw_candidates(
-            config=config,
-            raw_output_path=raw_output,
-            candidate_target=candidate_target,
-            max_results_per_query=max_results_per_query,
-        )
+    discovery_result = discover_raw_candidates(
+        config=config,
+        raw_output_path=raw_output,
+        candidate_target=candidate_target,
+        max_results_per_query=max_results_per_query,
     )
 
     print()
@@ -99,11 +74,9 @@ def main():
         )
     )
 
-    deduplication_result = (
-        deduplicate_candidates(
-            raw_input_path=raw_output,
-            unique_output_path=unique_output,
-        )
+    deduplication_result = deduplicate_candidates(
+        raw_input_path=raw_output,
+        unique_output_path=unique_output,
     )
 
     print()

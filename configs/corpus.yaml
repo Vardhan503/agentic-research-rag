@@ -28,6 +28,42 @@ discovery:
   report_output:
     data/interim/discovery_report.json
 
+llm_grading:
+  provider: ollama
+  model: "qwen3:4b-instruct"
+  temperature: 0
+
+  context_window: 8192
+  batch_size: 8
+  max_abstract_characters: 2000
+
+  max_retries: 3
+  retry_delay_seconds: 2
+
+  input:
+    data/interim/corpus_ambiguous.jsonl
+
+  graded_output:
+    data/interim/ambiguous_graded.jsonl
+
+  accepted_output:
+    data/interim/ambiguous_accepted.jsonl
+
+  review_output:
+    data/interim/ambiguous_review.jsonl
+
+  rejected_output:
+    data/interim/ambiguous_rejected.jsonl
+
+  checkpoint_output:
+    data/interim/ambiguous_grading_checkpoint.json
+
+  final_corpus_output:
+    data/processed/final_corpus.jsonl
+
+  report_output:
+    data/interim/llm_grading_report.json
+
 selection:
   retain_score: 8
   ambiguous_score: 4
@@ -46,6 +82,33 @@ selection:
 
   report_output:
     data/interim/selection_report.json
+
+ollama_grading:
+  model: "qwen3:14b"
+  host: "http://localhost:11434"
+
+  # One paper is sent in each request. batch_size controls how often
+  # progress is printed; it does not combine abstracts into one prompt.
+  batch_size: 10
+  context_window: 8192
+  max_abstract_characters: 6000
+  timeout_seconds: 300
+  max_retries: 3
+  retry_delay_seconds: 3
+  keep_alive: "30m"
+
+  accepted_min_score: 0.80
+  rejected_max_score: 0.39
+
+  input_path: "data/interim/corpus_ambiguous.jsonl"
+  graded_output_path: "data/interim/ambiguous_graded.jsonl"
+  accepted_output_path: "data/interim/ambiguous_accepted.jsonl"
+  review_output_path: "data/interim/ambiguous_review.jsonl"
+  rejected_output_path: "data/interim/ambiguous_rejected.jsonl"
+  checkpoint_path: "data/interim/ambiguous_grading_checkpoint.json"
+  report_path: "data/interim/llm_grading_report.json"
+  selection_report_path: "data/interim/selection_report.json"
+
 
 domain:
   name: "Agentic Retrieval-Augmented Generation"

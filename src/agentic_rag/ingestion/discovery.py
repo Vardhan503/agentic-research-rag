@@ -22,17 +22,11 @@ def build_filters(config):
 
     filters.append(f"language:{language}")
 
-    filters.append(
-        f"from_publication_date:{minimum_year}-01-01"
-    )
+    filters.append(f"from_publication_date:{minimum_year}-01-01")
 
-    filters.append(
-        f"to_publication_date:{maximum_year}-12-31"
-    )
+    filters.append(f"to_publication_date:{maximum_year}-12-31")
 
-    filters.append(
-        f"type:{type_filter}"
-    )
+    filters.append(f"type:{type_filter}")
 
     if corpus_config["require_open_access"]:
         filters.append("open_access.is_oa:true")
@@ -92,7 +86,6 @@ def discover_raw_candidates(
         "w",
         encoding="utf-8",
     ) as output_file:
-
         stop_discovery = False
 
         for query in queries:
@@ -174,9 +167,7 @@ def discover_raw_candidates(
                         stop_discovery = True
                         break
 
-                cursor = metadata.get(
-                    "next_cursor"
-                )
+                cursor = metadata.get("next_cursor")
 
                 print(
                     f"Page {query_page} | "
@@ -190,10 +181,7 @@ def discover_raw_candidates(
                 time.sleep(delay)
 
             print()
-            print(
-                "Completed query with "
-                f"{query_result_count} records."
-            )
+            print(f"Completed query with {query_result_count} records.")
 
             if stop_discovery:
                 break
@@ -230,7 +218,6 @@ def deduplicate_candidates(
         "r",
         encoding="utf-8",
     ) as input_file:
-
         for line in input_file:
             raw_records += 1
 
@@ -254,9 +241,7 @@ def deduplicate_candidates(
             if existing_id:
                 existing_paper = candidates[existing_id]
 
-                matched_queries = existing_paper[
-                    "matched_queries"
-                ]
+                matched_queries = existing_paper["matched_queries"]
 
                 if query not in matched_queries:
                     matched_queries.append(query)
@@ -265,9 +250,7 @@ def deduplicate_candidates(
 
             candidate = dict(paper)
 
-            candidate["matched_queries"] = [
-                query
-            ]
+            candidate["matched_queries"] = [query]
 
             candidate["query_match_count"] = 1
 
@@ -281,13 +264,10 @@ def deduplicate_candidates(
         "w",
         encoding="utf-8",
     ) as output_file:
-
         for paper_id in candidates:
             candidate = candidates[paper_id]
 
-            candidate["query_match_count"] = len(
-                candidate["matched_queries"]
-            )
+            candidate["query_match_count"] = len(candidate["matched_queries"])
 
             json.dump(
                 candidate,
@@ -297,9 +277,7 @@ def deduplicate_candidates(
 
             output_file.write("\n")
 
-    duplicates_removed = (
-        raw_records - len(candidates)
-    )
+    duplicates_removed = raw_records - len(candidates)
 
     result = {
         "raw_records": raw_records,
@@ -314,13 +292,9 @@ def create_discovery_report(
     unique_input_path,
     report_output_path,
 ):
-    unique_input_path = Path(
-        unique_input_path
-    )
+    unique_input_path = Path(unique_input_path)
 
-    report_output_path = Path(
-        report_output_path
-    )
+    report_output_path = Path(report_output_path)
 
     report_output_path.parent.mkdir(
         parents=True,
@@ -346,15 +320,12 @@ def create_discovery_report(
         "r",
         encoding="utf-8",
     ) as input_file:
-
         for line in input_file:
             paper = json.loads(line)
 
             total_papers += 1
 
-            year = paper.get(
-                "publication_year"
-            )
+            year = paper.get("publication_year")
 
             if year:
                 year_counts[str(year)] += 1
@@ -364,24 +335,18 @@ def create_discovery_report(
             if doi:
                 papers_with_doi += 1
 
-            abstract = paper.get(
-                "abstract_inverted_index"
-            )
+            abstract = paper.get("abstract_inverted_index")
 
             if abstract:
                 papers_with_abstract += 1
 
-            has_content = paper.get(
-                "has_content"
-            )
+            has_content = paper.get("has_content")
 
             if has_content:
                 if has_content.get("pdf"):
                     papers_with_pdf += 1
 
-                if has_content.get(
-                    "grobid_xml"
-                ):
+                if has_content.get("grobid_xml"):
                     papers_with_xml += 1
 
             if paper.get("is_retracted"):
@@ -401,9 +366,7 @@ def create_discovery_report(
             )
 
             for topic in topics:
-                topic_name = topic.get(
-                    "display_name"
-                )
+                topic_name = topic.get("display_name")
 
                 if topic_name:
                     topic_counts[topic_name] += 1
@@ -416,9 +379,7 @@ def create_discovery_report(
             "count": count,
         }
 
-        most_common_topics.append(
-            topic_record
-        )
+        most_common_topics.append(topic_record)
 
     report = {
         "total_unique_papers": total_papers,
@@ -427,12 +388,8 @@ def create_discovery_report(
         "papers_with_pdf": papers_with_pdf,
         "papers_with_grobid_xml": papers_with_xml,
         "retracted_papers": retracted_papers,
-        "year_distribution": dict(
-            sorted(year_counts.items())
-        ),
-        "query_distribution": dict(
-            query_counts
-        ),
+        "year_distribution": dict(sorted(year_counts.items())),
+        "query_distribution": dict(query_counts),
         "top_topics": most_common_topics,
     }
 
@@ -441,7 +398,6 @@ def create_discovery_report(
         "w",
         encoding="utf-8",
     ) as output_file:
-
         json.dump(
             report,
             output_file,

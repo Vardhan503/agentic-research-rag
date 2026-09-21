@@ -22,15 +22,9 @@ def test_build_filters():
 
     assert "language:en" in filters
 
-    assert (
-        "from_publication_date:2017-01-01"
-        in filters
-    )
+    assert "from_publication_date:2017-01-01" in filters
 
-    assert (
-        "to_publication_date:2026-12-31"
-        in filters
-    )
+    assert "to_publication_date:2026-12-31" in filters
 
     assert "open_access.is_oa:true" in filters
 

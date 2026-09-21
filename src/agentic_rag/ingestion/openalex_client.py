@@ -52,10 +52,7 @@ class OpenAlexClient:
                 if response.status_code == 429:
                     wait_seconds = 2 ** (attempt - 1)
 
-                    print(
-                        "OpenAlex rate limit reached. "
-                        f"Retrying in {wait_seconds} seconds..."
-                    )
+                    print(f"OpenAlex rate limit reached. Retrying in {wait_seconds} seconds...")
 
                     time.sleep(wait_seconds)
                     continue
@@ -63,10 +60,7 @@ class OpenAlexClient:
                 if response.status_code >= 500:
                     wait_seconds = 2 ** (attempt - 1)
 
-                    print(
-                        "OpenAlex server error. "
-                        f"Retrying in {wait_seconds} seconds..."
-                    )
+                    print(f"OpenAlex server error. Retrying in {wait_seconds} seconds...")
 
                     time.sleep(wait_seconds)
                     continue
@@ -88,9 +82,7 @@ class OpenAlexClient:
 
                 time.sleep(wait_seconds)
 
-        raise RuntimeError(
-            "OpenAlex request failed after maximum retries."
-        ) from last_error
+        raise RuntimeError("OpenAlex request failed after maximum retries.") from last_error
 
     def search_works_page(
         self,
