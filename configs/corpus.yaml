@@ -28,41 +28,41 @@ discovery:
   report_output:
     data/interim/discovery_report.json
 
-llm_grading:
-  provider: ollama
-  model: "qwen3:4b-instruct"
-  temperature: 0
+# llm_grading:
+#   provider: ollama
+#   model: "qwen3:4b-instruct"
+#   temperature: 0
 
-  context_window: 8192
-  batch_size: 8
-  max_abstract_characters: 2000
+#   context_window: 8192
+#   batch_size: 8
+#   max_abstract_characters: 2000
 
-  max_retries: 3
-  retry_delay_seconds: 2
+#   max_retries: 3
+#   retry_delay_seconds: 2
 
-  input:
-    data/interim/corpus_ambiguous.jsonl
+#   input:
+#     data/interim/corpus_ambiguous.jsonl
 
-  graded_output:
-    data/interim/ambiguous_graded.jsonl
+#   graded_output:
+#     data/interim/ambiguous_graded.jsonl
 
-  accepted_output:
-    data/interim/ambiguous_accepted.jsonl
+#   accepted_output:
+#     data/interim/ambiguous_accepted.jsonl
 
-  review_output:
-    data/interim/ambiguous_review.jsonl
+#   review_output:
+#     data/interim/ambiguous_review.jsonl
 
-  rejected_output:
-    data/interim/ambiguous_rejected.jsonl
+#   rejected_output:
+#     data/interim/ambiguous_rejected.jsonl
 
-  checkpoint_output:
-    data/interim/ambiguous_grading_checkpoint.json
+#   checkpoint_output:
+#     data/interim/ambiguous_grading_checkpoint.json
 
-  final_corpus_output:
-    data/processed/final_corpus.jsonl
+#   final_corpus_output:
+#     data/processed/final_corpus.jsonl
 
-  report_output:
-    data/interim/llm_grading_report.json
+#   report_output:
+#     data/interim/llm_grading_report.json
 
 selection:
   retain_score: 8
