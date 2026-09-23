@@ -120,6 +120,30 @@ oa_location_enrichment:
   max_retries: 5
   request_delay_seconds: 0.2
 
+direct_pdf_download:
+  input_path: "data/interim/final_corpus_oa_enriched.jsonl"
+  output_directory: "data/raw/content/pdf"
+
+  manifest_path: "data/interim/direct_pdf_manifest.jsonl"
+  report_path: "data/interim/direct_pdf_download_report.json"
+  failures_path: "data/interim/direct_pdf_download_failures.jsonl"
+
+  # Validate ten papers before running the full corpus.
+  default_limit: 10
+
+  connect_timeout_seconds: 20
+  read_timeout_seconds: 180
+  max_retries_per_url: 2
+  retry_delay_seconds: 3
+
+  # Delay between papers and between fallback URLs.
+  request_delay_seconds: 1.0
+  fallback_delay_seconds: 1.0
+
+  chunk_size_bytes: 65536
+  minimum_pdf_bytes: 10000
+  maximum_pdf_bytes: 104857600
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
