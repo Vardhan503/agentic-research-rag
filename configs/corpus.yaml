@@ -108,6 +108,18 @@ final_corpus:
   output: "data/processed/final_corpus.jsonl"
   report_output: "data/interim/final_corpus_report.json"
 
+oa_location_enrichment:
+  input_path: "data/processed/final_corpus.jsonl"
+  output_path: "data/interim/final_corpus_oa_enriched.jsonl"
+  report_path: "data/interim/oa_location_enrichment_report.json"
+  failures_path: "data/interim/oa_location_enrichment_failures.jsonl"
+
+  # A small validation run before processing the complete corpus.
+  default_limit: 25
+
+  max_retries: 5
+  request_delay_seconds: 0.2
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
