@@ -261,7 +261,6 @@ def count_content(final_records):
         "papers_with_grobid_xml": with_xml,
         "papers_with_abstract": with_abstract,
     }
-
 def measure_ambiguous_pipeline(
     ambiguous_records,
     graded_records,
@@ -297,6 +296,10 @@ def measure_ambiguous_pipeline(
         screened_keys
     )
 
+    deferred_keys = shortlist_keys.difference(
+        graded_keys
+    )
+
     screening_complete = (
         ambiguous_keys.issubset(
             resolved_keys
@@ -304,9 +307,7 @@ def measure_ambiguous_pipeline(
     )
 
     shortlist_grading_complete = (
-        shortlist_keys.issubset(
-            graded_keys
-        )
+        len(deferred_keys) == 0
     )
 
     pipeline_complete = (
@@ -336,6 +337,9 @@ def measure_ambiguous_pipeline(
                 graded_keys
             )
         ),
+        "deferred_review": len(
+            deferred_keys
+        ),
         "screening_complete": (
             screening_complete
         ),
@@ -346,6 +350,21 @@ def measure_ambiguous_pipeline(
             pipeline_complete
         ),
     }
+
+def determine_final_status(
+    pipeline_status,
+    allow_deferred_review,
+):
+    if pipeline_status["pipeline_complete"]:
+        return "complete"
+
+    if (
+        pipeline_status["screening_complete"]
+        and allow_deferred_review
+    ):
+        return "complete_with_deferred_review"
+
+    return "provisional"
 
 def assemble_final_corpus(
     config,
@@ -560,10 +579,17 @@ def assemble_final_corpus(
         final_records
     )
 
-    status = "complete"
+    allow_deferred_review = bool(
+        final_config.get(
+            "allow_deferred_review",
+            False,
+        )
+    )
 
-    if not grading_complete:
-        status = "provisional"
+    status = determine_final_status(
+        pipeline_status,
+        allow_deferred_review,
+    )
 
     report = {
         "status": status,
@@ -606,6 +632,14 @@ def assemble_final_corpus(
         "shortlist_graded": (
             pipeline_status[
                 "shortlist_graded"
+            ]
+        ),
+        "deferred_review_enabled": (
+            allow_deferred_review
+        ),
+        "deferred_ambiguous": (
+            pipeline_status[
+                "deferred_review"
             ]
         ),
         "input_counts": input_counts,

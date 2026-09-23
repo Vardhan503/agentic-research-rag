@@ -23,5 +23,7 @@ def test_ollama_grading_config_paths():
     grading_config = load_ollama_grading_config()
 
     assert grading_config["model"] == "qwen3:14b"
-    assert grading_config["input_path"] == "data/interim/corpus_ambiguous.jsonl"
+    assert grading_config["input_path"] == (
+        "data/interim/ambiguous_screened_shortlist.jsonl"
+    )
     assert grading_config["graded_output_path"].endswith("ambiguous_graded.jsonl")

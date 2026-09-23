@@ -98,7 +98,16 @@ ollama_grading:
   checkpoint_path: "data/interim/ambiguous_grading_checkpoint.json"
   report_path: "data/interim/llm_grading_report.json"
   selection_report_path: "data/interim/selection_report.json"
-  
+
+final_corpus:
+  # Permit a high-precision release while preserving ungraded
+  # shortlisted papers for future review.
+  allow_deferred_review: true
+
+  manual_approved_input: "data/interim/ambiguous_manual_approved.jsonl"
+  output: "data/processed/final_corpus.jsonl"
+  report_output: "data/interim/final_corpus_report.json"
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
