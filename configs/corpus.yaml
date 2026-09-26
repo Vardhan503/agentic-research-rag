@@ -202,7 +202,45 @@ text_extraction:
     parsed_output: "data/processed/parsed_jats_papers.jsonl"
     failures_output: "data/interim/jats_extraction_failures.jsonl"
     report_output: "data/interim/jats_extraction_report.json"
-    
+
+  grobid:
+    base_url: "http://localhost:8070"
+
+    inventory_path: "data/interim/local_content_inventory.jsonl"
+    corpus_path: "data/processed/final_corpus.jsonl"
+
+    output_directory: "data/raw/content/tei"
+    manifest_path: "data/interim/grobid_manifest.jsonl"
+    failures_path: "data/interim/grobid_failures.jsonl"
+    report_path: "data/interim/grobid_report.json"
+
+    timeout_seconds: 180
+    max_retries: 3
+    retry_delay_seconds: 5
+    request_delay_seconds: 0.25
+
+    minimum_tei_bytes: 1000
+    consolidate_header: false
+    consolidate_citations: false
+
+  # For backwards compatibility, TEI extraction is still supported
+  # as a fallback.
+  tei:
+    corpus_path: "data/processed/final_corpus.jsonl"
+    inventory_path: "data/interim/local_content_inventory.jsonl"
+    tei_directory: "data/raw/content/tei"
+
+    parsed_output: "data/processed/parsed_tei_papers.jsonl"
+    failures_output: "data/interim/tei_extraction_failures.jsonl"
+    report_output: "data/interim/tei_extraction_report.json"
+
+  unified:
+    corpus_path: "data/processed/final_corpus.jsonl"
+    parsed_jats_path: "data/processed/parsed_jats_papers.jsonl"
+    parsed_tei_path: "data/processed/parsed_tei_papers.jsonl"
+
+    output_path: "data/processed/parsed_corpus.jsonl"
+    report_path: "data/interim/parsed_corpus_report.json"
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
