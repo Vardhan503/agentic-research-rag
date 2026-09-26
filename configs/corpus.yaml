@@ -178,7 +178,19 @@ direct_pdf_download:
     xml_output_directory: "data/raw/content/xml"
     max_wait_seconds: 7200
     request_delay_seconds: 0.5
+    
+corpus_audit:
+  corpus_path: "data/processed/final_corpus.jsonl"
+  manifest_path: "data/interim/direct_pdf_manifest.jsonl"
 
+  pdf_directory: "data/raw/content/pdf"
+  xml_directory: "data/raw/content/xml"
+
+  inventory_output: "data/interim/local_content_inventory.jsonl"
+  report_output: "data/interim/local_content_audit_report.json"
+
+  minimum_pdf_bytes: 10000
+  minimum_xml_bytes: 1000
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
