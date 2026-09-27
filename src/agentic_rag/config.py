@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
+
 import yaml
 from dotenv import load_dotenv
-from pathlib import Path
+
 
 load_dotenv()
 
@@ -10,8 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def get_openalex_api_key():
     api_key = os.getenv("OPENALEX_API_KEY")
+
     if not api_key:
         raise ValueError("OPENALEX_API_KEY is not set")
+
     return api_key
 
 
@@ -47,6 +51,7 @@ def load_ollama_grading_config(config_path=None):
 
     return config["ollama_grading"]
 
+
 def load_ollama_screening_config(config_path=None):
     config = load_corpus_config(config_path)
 
@@ -57,3 +62,17 @@ def load_ollama_screening_config(config_path=None):
         )
 
     return config["ollama_screening"]
+
+
+def load_agentic_rag_config(config_path=None):
+    """Load the runtime settings used by CRAG and Self-RAG."""
+
+    config = load_corpus_config(config_path)
+
+    if "agentic_rag" not in config:
+        raise KeyError(
+            "Missing 'agentic_rag' section in "
+            + str(resolve_config_path(config_path))
+        )
+
+    return config["agentic_rag"]

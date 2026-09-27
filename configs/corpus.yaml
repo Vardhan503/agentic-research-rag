@@ -278,6 +278,30 @@ retrieval:
 
   final_top_k: 10
   max_chunks_per_paper: 3
+
+agentic_rag:
+  # Initially, qwen3:14b performs routing, grading, generation,
+  # and self-checking. Separate models can be configured later.
+  model: "qwen3:14b"
+  host: "http://localhost:11434"
+
+  context_window: 8192
+  num_predict: 500
+  temperature: 0.0
+  seed: 42
+  think: false
+
+  keep_alive: "30m"
+  max_retries: 3
+  retry_delay_seconds: 2
+
+  # Each retrieved chunk is shortened only when building an LLM prompt.
+  # The original indexed chunk is not modified.
+  maximum_context_characters_per_document: 2400
+
+  retrieval_top_k: 10
+  maximum_rewrite_attempts: 2
+  maximum_generation_attempts: 2
   
 domain:
   name: "Agentic Retrieval-Augmented Generation"
