@@ -241,6 +241,18 @@ text_extraction:
 
     output_path: "data/processed/parsed_corpus.jsonl"
     report_path: "data/interim/parsed_corpus_report.json"
+
+chunking:
+  input_path: "data/processed/parsed_corpus.jsonl"
+  output_path: "data/processed/document_chunks.jsonl"
+  report_path: "data/interim/chunking_report.json"
+
+  max_tokens: 300
+  overlap_tokens: 50
+  include_abstract: true
+  small_chunk_threshold: 40
+  progress_interval: 100
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
