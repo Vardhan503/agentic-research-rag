@@ -71,3 +71,55 @@ class ParsedPaper(BaseModel):
         character_count = self.content_character_count()
 
         return character_count >= minimum_characters
+    
+class DocumentChunk(BaseModel):
+    """One searchable piece of a parsed research paper."""
+
+    chunk_id: str
+    paper_id: str
+
+    title: str
+    doi: str | None = None
+    publication_year: int | None = None
+
+    section_id: str
+    section_heading: str
+    section_type: str
+    section_order: int = Field(ge=0)
+
+    chunk_index: int = Field(ge=0)
+
+    text: str = Field(min_length=1)
+    token_count: int = Field(ge=1)
+    character_count: int = Field(ge=1)
+
+    source_format: str
+    source_path: str
+
+    page_start: int | None = Field(
+        default=None,
+        ge=1,
+    )
+    page_end: int | None = Field(
+        default=None,
+        ge=1,
+    )
+
+    def embedding_text(self) -> str:
+        """Build the text that will be sent to an embedding model."""
+
+        text_parts: list[str] = []
+
+        clean_title = self.title.strip()
+
+        if clean_title:
+            text_parts.append(f"Paper: {clean_title}")
+
+        clean_heading = self.section_heading.strip()
+
+        if clean_heading:
+            text_parts.append(f"Section: {clean_heading}")
+
+        text_parts.append(self.text.strip())
+
+        return "\n".join(text_parts)
