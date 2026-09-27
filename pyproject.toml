@@ -15,6 +15,9 @@ dependencies = [
     "PyYAML>=6.0",
     "ollama>=0.6.2",
     "pydantic>=2.12",
+    "numpy>=1.26",
+    "faiss-cpu>=1.9",
+    "sentence-transformers>=3.4",
 
 ]
 
