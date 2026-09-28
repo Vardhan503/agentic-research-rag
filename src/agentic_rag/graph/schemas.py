@@ -33,7 +33,9 @@ class RewrittenQuery(BaseModel):
 
 class GeneratedAnswer(BaseModel):
     answer: str = Field(min_length=1)
-    source_ids: list[str] = Field(default_factory=list)
+    # Required with at least one entry so the structured-output
+    # grammar forces the model to declare its sources.
+    source_ids: list[str] = Field(min_length=1)
 
 
 class HallucinationResult(BaseModel):
