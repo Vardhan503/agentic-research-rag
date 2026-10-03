@@ -9,8 +9,13 @@ class RetrievalDecision(BaseModel):
 
 
 class DocumentGrade(BaseModel):
+    source_id: str = Field(min_length=1)
     grade: Literal["correct", "ambiguous", "incorrect"]
     reason: str = Field(min_length=3, max_length=400)
+
+
+class DocumentGradeBatch(BaseModel):
+    grades: list[DocumentGrade] = Field(min_length=1)
 
 
 class ContextAssessment(BaseModel):
@@ -33,9 +38,7 @@ class RewrittenQuery(BaseModel):
 
 class GeneratedAnswer(BaseModel):
     answer: str = Field(min_length=1)
-    # Required with at least one entry so the structured-output
-    # grammar forces the model to declare its sources.
-    source_ids: list[str] = Field(min_length=1)
+    source_ids: list[str] = Field(default_factory=list)
 
 
 class HallucinationResult(BaseModel):

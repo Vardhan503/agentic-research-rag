@@ -298,11 +298,12 @@ agentic_rag:
   # Each retrieved chunk is shortened only when building an LLM prompt.
   # The original indexed chunk is not modified.
   maximum_context_characters_per_document: 2400
+  maximum_grader_characters_per_document: 1600
 
   retrieval_top_k: 10
   maximum_rewrite_attempts: 2
   maximum_generation_attempts: 2
-  
+
 domain:
   name: "Agentic Retrieval-Augmented Generation"
 
