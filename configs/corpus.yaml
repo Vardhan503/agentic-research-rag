@@ -299,10 +299,23 @@ agentic_rag:
   # The original indexed chunk is not modified.
   maximum_context_characters_per_document: 2400
   maximum_grader_characters_per_document: 1600
+  maximum_rewrite_characters_per_document: 1200
+  maximum_accumulated_documents: 12
 
   retrieval_top_k: 10
   maximum_rewrite_attempts: 2
   maximum_generation_attempts: 2
+
+web_search:
+  enabled: true
+  provider: "tavily"
+
+  max_results: 5
+  search_depth: "advanced"
+  topic: "general"
+
+  maximum_content_characters: 4000
+  maximum_combined_documents: 12
 
 domain:
   name: "Agentic Retrieval-Augmented Generation"

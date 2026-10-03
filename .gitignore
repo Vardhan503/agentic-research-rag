@@ -41,6 +41,8 @@ data/processed/*.json
 data/processed/*.jsonl
 data/processed/chunks/*
 !data/processed/chunks/.gitkeep
+data/processed/indexes/*
+!data/processed/indexes/.gitkeep
 
 # Benchmark artifacts
 data/benchmark/*

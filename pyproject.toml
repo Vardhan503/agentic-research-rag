@@ -18,7 +18,7 @@ dependencies = [
     "numpy>=1.26",
     "faiss-cpu>=1.9",
     "sentence-transformers>=3.4",
-
+    "tavily-python>=0.7",
 ]
 
 
