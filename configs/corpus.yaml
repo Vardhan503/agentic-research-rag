@@ -300,6 +300,11 @@ agentic_rag:
   maximum_context_characters_per_document: 2400
   maximum_grader_characters_per_document: 1600
   maximum_rewrite_characters_per_document: 1200
+    # Maximum evidence characters used by hallucination and answer critics.
+  maximum_verifier_characters_per_document: 1800
+
+  # Protect the cyclic graph from accidental infinite loops.
+  graph_recursion_limit: 40
   maximum_accumulated_documents: 12
 
   retrieval_top_k: 10

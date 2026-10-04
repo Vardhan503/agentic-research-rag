@@ -8,6 +8,10 @@ class RetrievalDecision(BaseModel):
     reason: str = Field(min_length=3, max_length=400)
 
 
+class DirectAnswer(BaseModel):
+    answer: str = Field(min_length=1, max_length=2000)
+
+
 class DocumentGrade(BaseModel):
     source_id: str = Field(min_length=1)
     grade: Literal["correct", "ambiguous", "incorrect"]
