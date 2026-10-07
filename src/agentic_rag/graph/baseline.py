@@ -65,20 +65,14 @@ def build_generation_prompt(
     """Create the question and labelled evidence prompt."""
 
     if not documents:
-        raise ValueError(
-            "At least one evidence document is required."
-        )
+        raise ValueError("At least one evidence document is required.")
 
     context = build_context(
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
-    allowed_source_ids = ", ".join(
-        document.source_id for document in documents
-    )
+    allowed_source_ids = ", ".join(document.source_id for document in documents)
 
     return (
         "Question:\n"
@@ -100,13 +94,9 @@ def build_answer_schema(
     """
 
     if not documents:
-        raise ValueError(
-            "At least one evidence document is required."
-        )
+        raise ValueError("At least one evidence document is required.")
 
-    source_ids = tuple(
-        document.source_id for document in documents
-    )
+    source_ids = tuple(document.source_id for document in documents)
 
     allowed_ids = Literal.__getitem__(source_ids)
 
@@ -141,9 +131,7 @@ def repair_missing_citations(
 
     repaired_answer = answer + " " + " ".join(missing)
 
-    return generated.model_copy(
-        update={"answer": repaired_answer}
-    )
+    return generated.model_copy(update={"answer": repaired_answer})
 
 
 def invoke_grounded_generation(
@@ -189,10 +177,7 @@ def validate_generated_answer(
 
     for source_id in generated.source_ids:
         if source_id not in available_source_ids:
-            raise ValueError(
-                "The model returned an unknown source ID: "
-                + source_id
-            )
+            raise ValueError("The model returned an unknown source ID: " + source_id)
 
         if source_id in seen_source_ids:
             continue
@@ -200,18 +185,13 @@ def validate_generated_answer(
         citation_text = "[" + source_id + "]"
 
         if citation_text not in generated.answer:
-            raise ValueError(
-                "The answer did not contain its declared citation: "
-                + citation_text
-            )
+            raise ValueError("The answer did not contain its declared citation: " + citation_text)
 
         seen_source_ids.add(source_id)
         valid_source_ids.append(source_id)
 
     if not valid_source_ids:
-        raise ValueError(
-            "The grounded answer must cite at least one retrieved source."
-        )
+        raise ValueError("The grounded answer must cite at least one retrieved source.")
 
     return valid_source_ids
 
@@ -278,9 +258,7 @@ def generate_grounded_answer(
     prompt = build_generation_prompt(
         question=question,
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     return invoke_grounded_generation(
@@ -313,10 +291,7 @@ def run_baseline_rag(
 
         return BaselineRAGResult(
             question=clean_question,
-            answer=(
-                "No relevant evidence was found in the local "
-                "research corpus."
-            ),
+            answer=("No relevant evidence was found in the local research corpus."),
             retrieval_query=clean_question,
             elapsed_seconds=elapsed_seconds,
         )
@@ -325,9 +300,7 @@ def run_baseline_rag(
         question=clean_question,
         documents=documents,
         llm=llm,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     citations = build_citations(

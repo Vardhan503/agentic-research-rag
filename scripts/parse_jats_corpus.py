@@ -24,18 +24,12 @@ def get_jats_config(
     extraction_config = project_config.get("text_extraction")
 
     if extraction_config is None:
-        raise KeyError(
-            "The text_extraction section is missing from "
-            "configs/corpus.yaml."
-        )
+        raise KeyError("The text_extraction section is missing from configs/corpus.yaml.")
 
     jats_config = extraction_config.get("jats")
 
     if jats_config is None:
-        raise KeyError(
-            "The text_extraction.jats section is missing from "
-            "configs/corpus.yaml."
-        )
+        raise KeyError("The text_extraction.jats section is missing from configs/corpus.yaml.")
 
     required_settings = (
         "corpus_path",
@@ -47,9 +41,7 @@ def get_jats_config(
 
     for setting in required_settings:
         if setting not in jats_config:
-            raise KeyError(
-                f"Missing JATS configuration setting: {setting}"
-            )
+            raise KeyError(f"Missing JATS configuration setting: {setting}")
 
     minimum_characters = int(
         extraction_config.get(
@@ -123,9 +115,7 @@ def run_jats_extraction(
 
     corpus_index = build_corpus_index(corpus_records)
 
-    jats_records = select_jats_inventory_records(
-        inventory_records
-    )
+    jats_records = select_jats_inventory_records(inventory_records)
 
     parsed_records: list[dict[str, Any]] = []
     failure_records: list[dict[str, Any]] = []
@@ -188,36 +178,27 @@ def run_jats_extraction(
                     "openalex_id": work_id,
                     "xml_path": str(xml_path),
                     "status": "insufficient_text",
-                    "character_count": (
-                        paper.content_character_count()
-                    ),
+                    "character_count": (paper.content_character_count()),
                 }
             )
             insufficient_text += 1
             continue
 
         parsed_record = paper.model_dump(mode="json")
-        parsed_record["character_count"] = (
-            paper.content_character_count()
-        )
+        parsed_record["character_count"] = paper.content_character_count()
 
         parsed_records.append(parsed_record)
         total_sections += len(paper.sections)
 
         if position % 25 == 0 or position == selected_count:
-            print(
-                f"Processed: {position} / {selected_count} | "
-                f"Accepted: {len(parsed_records)}"
-            )
+            print(f"Processed: {position} / {selected_count} | Accepted: {len(parsed_records)}")
 
     write_jsonl(parsed_output, parsed_records)
     write_jsonl(failures_output, failure_records)
 
     report = {
         "status": "complete",
-        "processed_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
         "selected_jats_papers": selected_count,
         "successfully_parsed": len(parsed_records),
         "parse_failures": parse_failures,
@@ -249,9 +230,7 @@ def main() -> None:
 
     project_config = load_corpus_config()
 
-    jats_config, minimum_characters = get_jats_config(
-        project_config
-    )
+    jats_config, minimum_characters = get_jats_config(project_config)
 
     report = run_jats_extraction(
         jats_config=jats_config,

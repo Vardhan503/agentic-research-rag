@@ -93,15 +93,11 @@ def build_verification_prompt(
     """Build shared evidence input for grounding and usefulness checks."""
 
     if not documents:
-        raise ValueError(
-            "At least one evidence document is required for verification."
-        )
+        raise ValueError("At least one evidence document is required for verification.")
 
     context = build_context(
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     return (
@@ -126,9 +122,7 @@ def build_regeneration_prompt(
     prompt = build_generation_prompt(
         question=question,
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     if not feedback.strip():
@@ -159,9 +153,7 @@ def generate_answer(
         documents=documents,
         feedback=feedback,
         previous_answer=previous_answer,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     return invoke_grounded_generation(
@@ -184,9 +176,7 @@ def check_hallucination(
         question=question,
         answer=answer,
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     return llm.invoke(
@@ -209,9 +199,7 @@ def critique_answer(
         question=question,
         answer=answer,
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     return llm.invoke(
@@ -230,9 +218,7 @@ def hallucination_feedback(
 
     if result.unsupported_claims:
         feedback = feedback + " Unsupported claims: "
-        feedback = feedback + "; ".join(
-            result.unsupported_claims
-        )
+        feedback = feedback + "; ".join(result.unsupported_claims)
 
     if result.reason:
         feedback = feedback + " Verifier reason: " + result.reason
@@ -256,17 +242,12 @@ def run_self_rag(
         raise ValueError("Question cannot be empty.")
 
     if maximum_generation_attempts <= 0:
-        raise ValueError(
-            "maximum_generation_attempts must be positive."
-        )
+        raise ValueError("maximum_generation_attempts must be positive.")
 
     if not documents:
         return SelfRAGResult(
             status="insufficient_evidence",
-            answer=(
-                "There is not enough supported evidence to answer "
-                "the question."
-            ),
+            answer=("There is not enough supported evidence to answer the question."),
             critic_reason="No evidence documents were available.",
         )
 
@@ -284,9 +265,7 @@ def run_self_rag(
             llm=llm,
             feedback=feedback,
             previous_answer=previous_answer,
-            maximum_characters_per_document=(
-                maximum_generation_characters_per_document
-            ),
+            maximum_characters_per_document=(maximum_generation_characters_per_document),
         )
 
         last_generated = generated
@@ -297,9 +276,7 @@ def run_self_rag(
             answer=generated.answer,
             documents=documents,
             llm=llm,
-            maximum_characters_per_document=(
-                maximum_verifier_characters_per_document
-            ),
+            maximum_characters_per_document=(maximum_verifier_characters_per_document),
         )
         last_hallucination = hallucination
 
@@ -313,9 +290,7 @@ def run_self_rag(
             answer=generated.answer,
             documents=documents,
             llm=llm,
-            maximum_characters_per_document=(
-                maximum_verifier_characters_per_document
-            ),
+            maximum_characters_per_document=(maximum_verifier_characters_per_document),
         )
         last_critique = critique
 
@@ -333,9 +308,7 @@ def run_self_rag(
                 grounded=True,
                 useful=True,
                 hallucination_reason=hallucination.reason,
-                unsupported_claims=(
-                    hallucination.unsupported_claims
-                ),
+                unsupported_claims=(hallucination.unsupported_claims),
                 critic_reason=critique.reason,
                 generation_count=attempt_number,
             )
@@ -351,9 +324,7 @@ def run_self_rag(
                 needs_more_context=True,
                 hallucination_reason=hallucination.reason,
                 critic_reason=critique.reason,
-                improvement_feedback=(
-                    critique.improvement_feedback
-                ),
+                improvement_feedback=(critique.improvement_feedback),
                 generation_count=attempt_number,
             )
 
@@ -381,18 +352,12 @@ def run_self_rag(
     if last_hallucination is not None:
         result.grounded = last_hallucination.grounded
         result.hallucination_reason = last_hallucination.reason
-        result.unsupported_claims = (
-            last_hallucination.unsupported_claims
-        )
+        result.unsupported_claims = last_hallucination.unsupported_claims
 
     if last_critique is not None:
         result.useful = last_critique.useful
-        result.needs_more_context = (
-            last_critique.needs_more_context
-        )
+        result.needs_more_context = last_critique.needs_more_context
         result.critic_reason = last_critique.reason
-        result.improvement_feedback = (
-            last_critique.improvement_feedback
-        )
+        result.improvement_feedback = last_critique.improvement_feedback
 
     return result

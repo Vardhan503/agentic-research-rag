@@ -91,21 +91,15 @@ def embed_and_store_batch(
     embeddings = np.ascontiguousarray(embeddings)
 
     if embeddings.ndim != 2:
-        raise ValueError(
-            "The embedding model returned an invalid shape."
-        )
+        raise ValueError("The embedding model returned an invalid shape.")
 
     embedding_dimension = int(embeddings.shape[1])
 
     if dense_index is None:
-        dense_index = faiss.IndexFlatIP(
-            embedding_dimension
-        )
+        dense_index = faiss.IndexFlatIP(embedding_dimension)
 
     if dense_index.d != embedding_dimension:
-        raise ValueError(
-            "Embedding dimension changed during indexing."
-        )
+        raise ValueError("Embedding dimension changed during indexing.")
 
     dense_index.add(embeddings)
 
@@ -162,19 +156,13 @@ def build_retrieval_indexes(
     """Build dense FAISS and sparse SQLite indexes."""
 
     if embedding_batch_size <= 0:
-        raise ValueError(
-            "embedding_batch_size must be positive."
-        )
+        raise ValueError("embedding_batch_size must be positive.")
 
     if minimum_index_tokens < 1:
-        raise ValueError(
-            "minimum_index_tokens must be at least one."
-        )
+        raise ValueError("minimum_index_tokens must be at least one.")
 
     if not chunks_path.exists():
-        raise FileNotFoundError(
-            f"Chunk file does not exist: {chunks_path}"
-        )
+        raise FileNotFoundError(f"Chunk file does not exist: {chunks_path}")
 
     faiss_index_path.parent.mkdir(
         parents=True,
@@ -185,12 +173,8 @@ def build_retrieval_indexes(
         exist_ok=True,
     )
 
-    temporary_faiss_path = faiss_index_path.with_suffix(
-        f"{faiss_index_path.suffix}.tmp"
-    )
-    temporary_sqlite_path = sqlite_index_path.with_suffix(
-        f"{sqlite_index_path.suffix}.tmp"
-    )
+    temporary_faiss_path = faiss_index_path.with_suffix(f"{faiss_index_path.suffix}.tmp")
+    temporary_sqlite_path = sqlite_index_path.with_suffix(f"{sqlite_index_path.suffix}.tmp")
 
     temporary_faiss_path.unlink(missing_ok=True)
     temporary_sqlite_path.unlink(missing_ok=True)
@@ -204,15 +188,10 @@ def build_retrieval_indexes(
     except sqlite3.OperationalError as error:
         connection.close()
 
-        raise RuntimeError(
-            "SQLite FTS5 is unavailable in this Python "
-            "installation."
-        ) from error
+        raise RuntimeError("SQLite FTS5 is unavailable in this Python installation.") from error
 
     if embedding_model is None:
-        embedding_model = create_embedding_model(
-            embedding_model_name
-        )
+        embedding_model = create_embedding_model(embedding_model_name)
 
     dense_index: Any | None = None
     pending_chunks: list[DocumentChunk] = []
@@ -224,10 +203,7 @@ def build_retrieval_indexes(
 
     with chunks_path.open("r", encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):
-            if (
-                limit is not None
-                and input_chunks >= limit
-            ):
+            if limit is not None and input_chunks >= limit:
                 break
 
             clean_line = line.strip()
@@ -243,9 +219,7 @@ def build_retrieval_indexes(
             except (json.JSONDecodeError, ValueError) as error:
                 connection.close()
 
-                raise ValueError(
-                    f"Invalid chunk on line {line_number}."
-                ) from error
+                raise ValueError(f"Invalid chunk on line {line_number}.") from error
 
             if chunk.token_count < minimum_index_tokens:
                 filtered_small_chunks += 1
@@ -269,9 +243,7 @@ def build_retrieval_indexes(
             pending_chunks = []
 
             if indexed_chunks % 5000 == 0:
-                print(
-                    f"Indexed chunks: {indexed_chunks}"
-                )
+                print(f"Indexed chunks: {indexed_chunks}")
 
     if pending_chunks:
         dense_index, vector_id = embed_and_store_batch(
@@ -288,9 +260,7 @@ def build_retrieval_indexes(
     if dense_index is None or indexed_chunks == 0:
         connection.close()
 
-        raise ValueError(
-            "No chunks were eligible for indexing."
-        )
+        raise ValueError("No chunks were eligible for indexing.")
 
     connection.execute(
         """
@@ -317,9 +287,7 @@ def build_retrieval_indexes(
 
     report = {
         "status": status,
-        "built_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "built_at": datetime.now(timezone.utc).isoformat(),
         "input_chunks": input_chunks,
         "indexed_chunks": indexed_chunks,
         "filtered_small_chunks": filtered_small_chunks,

@@ -80,9 +80,7 @@ def test_parse_complete_jats_file(
     )
 
     assert paper.paper_id == "W1001"
-    assert paper.title == (
-        "Retrieval-Augmented Generation Study"
-    )
+    assert paper.title == ("Retrieval-Augmented Generation Study")
     assert paper.doi == "10.1000/example"
     assert paper.publication_year == 2024
     assert paper.source_format == "jats_xml"

@@ -22,12 +22,8 @@ def create_hybrid_retriever(
     """Build the project's HybridRetriever from YAML settings."""
 
     return HybridRetriever(
-        faiss_index_path=resolve_project_path(
-            config["faiss_index_path"]
-        ),
-        sqlite_index_path=resolve_project_path(
-            config["sqlite_index_path"]
-        ),
+        faiss_index_path=resolve_project_path(config["faiss_index_path"]),
+        sqlite_index_path=resolve_project_path(config["sqlite_index_path"]),
         embedding_model_name=str(config["embedding_model"]),
         reranker_model_name=str(config["reranker_model"]),
         query_prefix=str(config.get("query_prefix", "")),
@@ -36,10 +32,6 @@ def create_hybrid_retriever(
         fusion_top_k=int(config.get("fusion_top_k", 30)),
         final_top_k=int(config.get("final_top_k", 10)),
         rrf_k=int(config.get("rrf_k", 60)),
-        reranker_batch_size=int(
-            config.get("reranker_batch_size", 16)
-        ),
-        max_chunks_per_paper=int(
-            config.get("max_chunks_per_paper", 3)
-        ),
+        reranker_batch_size=int(config.get("reranker_batch_size", 16)),
+        max_chunks_per_paper=int(config.get("max_chunks_per_paper", 3)),
     )

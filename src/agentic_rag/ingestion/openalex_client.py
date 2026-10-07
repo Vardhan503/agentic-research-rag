@@ -30,6 +30,7 @@ SELECT_FIELDS = [
     "is_retracted",
 ]
 
+
 def normalize_work_id(value):
     if not value:
         return ""
@@ -51,6 +52,7 @@ def normalize_work_id(value):
         return ""
 
     return normalized
+
 
 class OpenAlexClient:
     def __init__(self, max_retries=5):
@@ -127,35 +129,25 @@ class OpenAlexClient:
             endpoint=endpoint,
             params=params,
         )
+
     def get_work(
         self,
         work_id,
         select_fields=None,
     ):
-        normalized_id = normalize_work_id(
-            work_id
-        )
+        normalized_id = normalize_work_id(work_id)
 
         if not normalized_id:
-            raise ValueError(
-                "Invalid OpenAlex work ID: "
-                + str(work_id)
-            )
+            raise ValueError("Invalid OpenAlex work ID: " + str(work_id))
 
-        endpoint = (
-            BASE_URL
-            + "/works/"
-            + normalized_id
-        )
+        endpoint = BASE_URL + "/works/" + normalized_id
 
         params = {
             "api_key": self.api_key,
         }
 
         if select_fields:
-            params["select"] = ",".join(
-                select_fields
-            )
+            params["select"] = ",".join(select_fields)
 
         return self._get(
             endpoint=endpoint,

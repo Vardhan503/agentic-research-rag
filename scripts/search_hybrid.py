@@ -9,9 +9,7 @@ from agentic_rag.retrieval.hybrid import HybridRetriever
 def parse_arguments() -> argparse.Namespace:
     """Read the search query and options."""
 
-    parser = argparse.ArgumentParser(
-        description="Search the research corpus."
-    )
+    parser = argparse.ArgumentParser(description="Search the research corpus.")
 
     parser.add_argument(
         "query",
@@ -42,9 +40,7 @@ def get_retrieval_config(
     config = project_config.get("retrieval")
 
     if config is None:
-        raise KeyError(
-            "Missing retrieval configuration."
-        )
+        raise KeyError("Missing retrieval configuration.")
 
     return config
 
@@ -57,35 +53,21 @@ def main() -> None:
     config = get_retrieval_config(project_config)
 
     retriever = HybridRetriever(
-        faiss_index_path=Path(
-            config["faiss_index_path"]
-        ),
-        sqlite_index_path=Path(
-            config["sqlite_index_path"]
-        ),
-        embedding_model_name=config[
-            "embedding_model"
-        ],
-        reranker_model_name=config[
-            "reranker_model"
-        ],
+        faiss_index_path=Path(config["faiss_index_path"]),
+        sqlite_index_path=Path(config["sqlite_index_path"]),
+        embedding_model_name=config["embedding_model"],
+        reranker_model_name=config["reranker_model"],
         query_prefix=config.get(
             "query_prefix",
             "",
         ),
         dense_top_k=int(config["dense_top_k"]),
         sparse_top_k=int(config["sparse_top_k"]),
-        fusion_top_k=int(
-            config["fusion_top_k"]
-        ),
+        fusion_top_k=int(config["fusion_top_k"]),
         final_top_k=int(config["final_top_k"]),
         rrf_k=int(config["rrf_k"]),
-        reranker_batch_size=int(
-            config["reranker_batch_size"]
-        ),
-        max_chunks_per_paper=int(
-            config["max_chunks_per_paper"]
-        ),
+        reranker_batch_size=int(config["reranker_batch_size"]),
+        max_chunks_per_paper=int(config["max_chunks_per_paper"]),
     )
 
     try:

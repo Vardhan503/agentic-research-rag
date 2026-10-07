@@ -22,9 +22,7 @@ QUERY_TOKEN_PATTERN = re.compile(
 def build_fts_query(query: str) -> str:
     """Convert a user question into a safe FTS5 query."""
 
-    tokens = QUERY_TOKEN_PATTERN.findall(
-        query.lower()
-    )
+    tokens = QUERY_TOKEN_PATTERN.findall(query.lower())
 
     terms: list[str] = []
     seen_tokens: set[str] = set()
@@ -86,9 +84,7 @@ def reciprocal_rank_fusion(
         chunk_id = candidate.chunk.chunk_id
 
         fused_candidate = candidate.model_copy(deep=True)
-        fused_candidate.rrf_score = (
-            1.0 / (rrf_k + rank)
-        )
+        fused_candidate.rrf_score = 1.0 / (rrf_k + rank)
 
         if "dense" not in fused_candidate.sources:
             fused_candidate.sources.append("dense")
@@ -102,35 +98,23 @@ def reciprocal_rank_fusion(
         chunk_id = candidate.chunk.chunk_id
         rrf_score = 1.0 / (rrf_k + rank)
 
-        existing_candidate = candidate_index.get(
-            chunk_id
-        )
+        existing_candidate = candidate_index.get(chunk_id)
 
         if existing_candidate is None:
-            fused_candidate = candidate.model_copy(
-                deep=True
-            )
+            fused_candidate = candidate.model_copy(deep=True)
             fused_candidate.rrf_score = rrf_score
 
             if "sparse" not in fused_candidate.sources:
-                fused_candidate.sources.append(
-                    "sparse"
-                )
+                fused_candidate.sources.append("sparse")
 
-            candidate_index[chunk_id] = (
-                fused_candidate
-            )
+            candidate_index[chunk_id] = fused_candidate
             continue
 
         existing_candidate.rrf_score += rrf_score
-        existing_candidate.sparse_score = (
-            candidate.sparse_score
-        )
+        existing_candidate.sparse_score = candidate.sparse_score
 
         if "sparse" not in existing_candidate.sources:
-            existing_candidate.sources.append(
-                "sparse"
-            )
+            existing_candidate.sources.append("sparse")
 
     fused_results: list[RetrievalCandidate] = []
 
@@ -194,20 +178,12 @@ class HybridRetriever:
         """Load indexes and retrieval models."""
 
         if not faiss_index_path.exists():
-            raise FileNotFoundError(
-                f"FAISS index not found: "
-                f"{faiss_index_path}"
-            )
+            raise FileNotFoundError(f"FAISS index not found: {faiss_index_path}")
 
         if not sqlite_index_path.exists():
-            raise FileNotFoundError(
-                f"SQLite index not found: "
-                f"{sqlite_index_path}"
-            )
+            raise FileNotFoundError(f"SQLite index not found: {sqlite_index_path}")
 
-        self.dense_index = faiss.read_index(
-            str(faiss_index_path)
-        )
+        self.dense_index = faiss.read_index(str(faiss_index_path))
 
         self.connection = sqlite3.connect(
             f"file:{sqlite_index_path}?mode=ro",
@@ -221,18 +197,14 @@ class HybridRetriever:
         self.final_top_k = final_top_k
         self.rrf_k = rrf_k
         self.reranker_batch_size = reranker_batch_size
-        self.max_chunks_per_paper = (
-            max_chunks_per_paper
-        )
+        self.max_chunks_per_paper = max_chunks_per_paper
 
         if embedding_model is None:
             from sentence_transformers import (
                 SentenceTransformer,
             )
 
-            embedding_model = SentenceTransformer(
-                embedding_model_name
-            )
+            embedding_model = SentenceTransformer(embedding_model_name)
 
         self.embedding_model = embedding_model
 
@@ -248,9 +220,7 @@ class HybridRetriever:
         else:
             self.reranker = None
 
-        row = self.connection.execute(
-            "SELECT COUNT(*) FROM chunks"
-        ).fetchone()
+        row = self.connection.execute("SELECT COUNT(*) FROM chunks").fetchone()
 
         sqlite_count = 0
 
@@ -260,9 +230,7 @@ class HybridRetriever:
         if sqlite_count != self.dense_index.ntotal:
             self.connection.close()
 
-            raise ValueError(
-                "FAISS and SQLite index sizes do not match."
-            )
+            raise ValueError("FAISS and SQLite index sizes do not match.")
 
     def load_chunk(
         self,
@@ -330,9 +298,7 @@ class HybridRetriever:
 
             candidate = RetrievalCandidate(
                 chunk=chunk,
-                dense_score=float(
-                    scores[0][position]
-                ),
+                dense_score=float(scores[0][position]),
                 sources=["dense"],
             )
 
@@ -372,9 +338,7 @@ class HybridRetriever:
         results: list[RetrievalCandidate] = []
 
         for chunk_json, raw_score in rows:
-            chunk = DocumentChunk.model_validate_json(
-                chunk_json
-            )
+            chunk = DocumentChunk.model_validate_json(chunk_json)
 
             candidate = RetrievalCandidate(
                 chunk=chunk,
@@ -460,9 +424,7 @@ class HybridRetriever:
         return apply_paper_diversity(
             candidates=fused_results,
             top_k=top_k,
-            max_chunks_per_paper=(
-                self.max_chunks_per_paper
-            ),
+            max_chunks_per_paper=(self.max_chunks_per_paper),
         )
 
     def close(self) -> None:

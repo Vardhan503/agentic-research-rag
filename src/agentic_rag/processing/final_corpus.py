@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from agentic_rag.processing.ollama_grader import paper_key
 
+
 def read_jsonl(path):
     records = []
     input_path = Path(path)
@@ -24,9 +25,7 @@ def read_jsonl(path):
             if not stripped_line:
                 continue
 
-            records.append(
-                json.loads(stripped_line)
-            )
+            records.append(json.loads(stripped_line))
 
     return records
 
@@ -87,11 +86,7 @@ def resolve_project_path(
 
 
 def normalize_openalex_id(paper):
-    value = (
-        paper.get("id")
-        or paper.get("paper_id")
-        or ""
-    )
+    value = paper.get("id") or paper.get("paper_id") or ""
 
     value = str(value).strip().lower()
 
@@ -115,7 +110,7 @@ def normalize_doi(paper):
 
     for prefix in prefixes:
         if value.startswith(prefix):
-            value = value[len(prefix):]
+            value = value[len(prefix) :]
             break
 
     return value.strip()
@@ -141,17 +136,11 @@ def normalize_title(paper):
 
 
 def has_downloadable_content(paper):
-    has_content = paper.get(
-        "has_content"
-    ) or {}
+    has_content = paper.get("has_content") or {}
 
-    has_pdf = bool(
-        has_content.get("pdf")
-    )
+    has_pdf = bool(has_content.get("pdf"))
 
-    has_xml = bool(
-        has_content.get("grobid_xml")
-    )
+    has_xml = bool(has_content.get("grobid_xml"))
 
     return has_pdf or has_xml
 
@@ -170,9 +159,7 @@ def find_quality_failures(
 
     if require_full_text:
         if not has_downloadable_content(paper):
-            failures.append(
-                "missing_downloadable_content"
-            )
+            failures.append("missing_downloadable_content")
 
     return failures
 
@@ -183,9 +170,7 @@ def find_duplicate_reason(
     seen_dois,
     seen_titles,
 ):
-    openalex_id = normalize_openalex_id(
-        paper
-    )
+    openalex_id = normalize_openalex_id(paper)
 
     doi = normalize_doi(paper)
     title = normalize_title(paper)
@@ -211,17 +196,13 @@ def remember_paper(
     seen_dois,
     seen_titles,
 ):
-    openalex_id = normalize_openalex_id(
-        paper
-    )
+    openalex_id = normalize_openalex_id(paper)
 
     doi = normalize_doi(paper)
     title = normalize_title(paper)
 
     if openalex_id:
-        seen_openalex_ids.add(
-            openalex_id
-        )
+        seen_openalex_ids.add(openalex_id)
 
     if doi:
         seen_dois.add(doi)
@@ -236,9 +217,7 @@ def count_content(final_records):
     with_abstract = 0
 
     for paper in final_records:
-        has_content = paper.get(
-            "has_content"
-        ) or {}
+        has_content = paper.get("has_content") or {}
 
         if has_content.get("pdf"):
             with_pdf += 1
@@ -249,9 +228,7 @@ def count_content(final_records):
         abstract = paper.get("abstract")
 
         if not abstract:
-            abstract = paper.get(
-                "abstract_inverted_index"
-            )
+            abstract = paper.get("abstract_inverted_index")
 
         if abstract:
             with_abstract += 1
@@ -261,6 +238,8 @@ def count_content(final_records):
         "papers_with_grobid_xml": with_xml,
         "papers_with_abstract": with_abstract,
     }
+
+
 def measure_ambiguous_pipeline(
     ambiguous_records,
     graded_records,
@@ -273,83 +252,39 @@ def measure_ambiguous_pipeline(
     shortlist_keys = set()
 
     for paper in ambiguous_records:
-        ambiguous_keys.add(
-            paper_key(paper)
-        )
+        ambiguous_keys.add(paper_key(paper))
 
     for paper in graded_records:
-        graded_keys.add(
-            paper_key(paper)
-        )
+        graded_keys.add(paper_key(paper))
 
     for paper in screening_records:
-        screened_keys.add(
-            paper_key(paper)
-        )
+        screened_keys.add(paper_key(paper))
 
     for paper in shortlist_records:
-        shortlist_keys.add(
-            paper_key(paper)
-        )
+        shortlist_keys.add(paper_key(paper))
 
-    resolved_keys = graded_keys.union(
-        screened_keys
-    )
+    resolved_keys = graded_keys.union(screened_keys)
 
-    deferred_keys = shortlist_keys.difference(
-        graded_keys
-    )
+    deferred_keys = shortlist_keys.difference(graded_keys)
 
-    screening_complete = (
-        ambiguous_keys.issubset(
-            resolved_keys
-        )
-    )
+    screening_complete = ambiguous_keys.issubset(resolved_keys)
 
-    shortlist_grading_complete = (
-        len(deferred_keys) == 0
-    )
+    shortlist_grading_complete = len(deferred_keys) == 0
 
-    pipeline_complete = (
-        screening_complete
-        and shortlist_grading_complete
-    )
+    pipeline_complete = screening_complete and shortlist_grading_complete
 
     return {
-        "ambiguous_candidates": len(
-            ambiguous_keys
-        ),
-        "ambiguous_graded": len(
-            ambiguous_keys.intersection(
-                graded_keys
-            )
-        ),
-        "ambiguous_screened": len(
-            ambiguous_keys.intersection(
-                screened_keys
-            )
-        ),
-        "screening_shortlist": len(
-            shortlist_keys
-        ),
-        "shortlist_graded": len(
-            shortlist_keys.intersection(
-                graded_keys
-            )
-        ),
-        "deferred_review": len(
-            deferred_keys
-        ),
-        "screening_complete": (
-            screening_complete
-        ),
-        "shortlist_grading_complete": (
-            shortlist_grading_complete
-        ),
-        "pipeline_complete": (
-            pipeline_complete
-        ),
+        "ambiguous_candidates": len(ambiguous_keys),
+        "ambiguous_graded": len(ambiguous_keys.intersection(graded_keys)),
+        "ambiguous_screened": len(ambiguous_keys.intersection(screened_keys)),
+        "screening_shortlist": len(shortlist_keys),
+        "shortlist_graded": len(shortlist_keys.intersection(graded_keys)),
+        "deferred_review": len(deferred_keys),
+        "screening_complete": (screening_complete),
+        "shortlist_grading_complete": (shortlist_grading_complete),
+        "pipeline_complete": (pipeline_complete),
     }
+
 
 def determine_final_status(
     pipeline_status,
@@ -358,13 +293,11 @@ def determine_final_status(
     if pipeline_status["pipeline_complete"]:
         return "complete"
 
-    if (
-        pipeline_status["screening_complete"]
-        and allow_deferred_review
-    ):
+    if pipeline_status["screening_complete"] and allow_deferred_review:
         return "complete_with_deferred_review"
 
     return "provisional"
+
 
 def assemble_final_corpus(
     config,
@@ -372,13 +305,9 @@ def assemble_final_corpus(
 ):
     corpus_config = config["corpus"]
     selection_config = config["selection"]
-    grading_config = config[
-        "ollama_grading"
-    ]
+    grading_config = config["ollama_grading"]
 
-    screening_config = config[
-        "ollama_screening"
-    ]
+    screening_config = config["ollama_screening"]
 
     final_config = config["final_corpus"]
 
@@ -397,22 +326,14 @@ def assemble_final_corpus(
         project_root,
     )
 
-    screening_decisions_path = (
-        resolve_project_path(
-            screening_config[
-                "decisions_output_path"
-            ],
-            project_root,
-        )
+    screening_decisions_path = resolve_project_path(
+        screening_config["decisions_output_path"],
+        project_root,
     )
 
-    screening_shortlist_path = (
-        resolve_project_path(
-            screening_config[
-                "shortlist_output_path"
-            ],
-            project_root,
-        )
+    screening_shortlist_path = resolve_project_path(
+        screening_config["shortlist_output_path"],
+        project_root,
     )
 
     accepted_path = resolve_project_path(
@@ -421,9 +342,7 @@ def assemble_final_corpus(
     )
 
     manual_path = resolve_project_path(
-        final_config[
-            "manual_approved_input"
-        ],
+        final_config["manual_approved_input"],
         project_root,
     )
 
@@ -437,33 +356,19 @@ def assemble_final_corpus(
         project_root,
     )
 
-    retained_records = read_jsonl(
-        retained_path
-    )
+    retained_records = read_jsonl(retained_path)
 
-    accepted_records = read_jsonl(
-        accepted_path
-    )
+    accepted_records = read_jsonl(accepted_path)
 
-    manual_records = read_jsonl(
-        manual_path
-    )
+    manual_records = read_jsonl(manual_path)
 
-    ambiguous_records = read_jsonl(
-        ambiguous_path
-    )
+    ambiguous_records = read_jsonl(ambiguous_path)
 
-    graded_records = read_jsonl(
-        graded_path
-    )
+    graded_records = read_jsonl(graded_path)
 
-    screening_records = read_jsonl(
-        screening_decisions_path
-    )
+    screening_records = read_jsonl(screening_decisions_path)
 
-    shortlist_records = read_jsonl(
-        screening_shortlist_path
-    )
+    shortlist_records = read_jsonl(screening_shortlist_path)
 
     sources = [
         (
@@ -497,9 +402,7 @@ def assemble_final_corpus(
     )
 
     for source_name, records in sources:
-        input_counts[source_name] = len(
-            records
-        )
+        input_counts[source_name] = len(records)
 
         for paper in records:
             failures = find_quality_failures(
@@ -509,25 +412,19 @@ def assemble_final_corpus(
 
             if failures:
                 for failure in failures:
-                    quality_rejections[
-                        failure
-                    ] += 1
+                    quality_rejections[failure] += 1
 
                 continue
 
-            duplicate_reason = (
-                find_duplicate_reason(
-                    paper,
-                    seen_openalex_ids,
-                    seen_dois,
-                    seen_titles,
-                )
+            duplicate_reason = find_duplicate_reason(
+                paper,
+                seen_openalex_ids,
+                seen_dois,
+                seen_titles,
             )
 
             if duplicate_reason:
-                duplicates_removed[
-                    duplicate_reason
-                ] += 1
+                duplicates_removed[duplicate_reason] += 1
                 continue
 
             final_paper = dict(paper)
@@ -536,13 +433,9 @@ def assemble_final_corpus(
                 "source": source_name,
             }
 
-            final_records.append(
-                final_paper
-            )
+            final_records.append(final_paper)
 
-            accepted_by_source[
-                source_name
-            ] += 1
+            accepted_by_source[source_name] += 1
 
             remember_paper(
                 paper,
@@ -556,28 +449,20 @@ def assemble_final_corpus(
         output_path,
     )
 
-    pipeline_status = (
-        measure_ambiguous_pipeline(
-            ambiguous_records,
-            graded_records,
-            screening_records,
-            shortlist_records,
-        )
+    pipeline_status = measure_ambiguous_pipeline(
+        ambiguous_records,
+        graded_records,
+        screening_records,
+        shortlist_records,
     )
 
-    grading_complete = pipeline_status[
-        "pipeline_complete"
-    ]
+    grading_complete = pipeline_status["pipeline_complete"]
 
-    target_papers = int(
-        corpus_config["target_papers"]
-    )
+    target_papers = int(corpus_config["target_papers"])
 
     final_count = len(final_records)
 
-    content_counts = count_content(
-        final_records
-    )
+    content_counts = count_content(final_records)
 
     allow_deferred_review = bool(
         final_config.get(
@@ -593,80 +478,30 @@ def assemble_final_corpus(
 
     report = {
         "status": status,
-        "assembled_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
-        "ambiguous_grading_complete": (
-            grading_complete
-        ),
-        "screening_complete": (
-            pipeline_status[
-                "screening_complete"
-            ]
-        ),
-        "shortlist_grading_complete": (
-            pipeline_status[
-                "shortlist_grading_complete"
-            ]
-        ),
-        "ambiguous_candidates": (
-            pipeline_status[
-                "ambiguous_candidates"
-            ]
-        ),
-        "ambiguous_graded": (
-            pipeline_status[
-                "ambiguous_graded"
-            ]
-        ),
-        "ambiguous_screened": (
-            pipeline_status[
-                "ambiguous_screened"
-            ]
-        ),
-        "screening_shortlist": (
-            pipeline_status[
-                "screening_shortlist"
-            ]
-        ),
-        "shortlist_graded": (
-            pipeline_status[
-                "shortlist_graded"
-            ]
-        ),
-        "deferred_review_enabled": (
-            allow_deferred_review
-        ),
-        "deferred_ambiguous": (
-            pipeline_status[
-                "deferred_review"
-            ]
-        ),
+        "assembled_at": datetime.now(timezone.utc).isoformat(),
+        "ambiguous_grading_complete": (grading_complete),
+        "screening_complete": (pipeline_status["screening_complete"]),
+        "shortlist_grading_complete": (pipeline_status["shortlist_grading_complete"]),
+        "ambiguous_candidates": (pipeline_status["ambiguous_candidates"]),
+        "ambiguous_graded": (pipeline_status["ambiguous_graded"]),
+        "ambiguous_screened": (pipeline_status["ambiguous_screened"]),
+        "screening_shortlist": (pipeline_status["screening_shortlist"]),
+        "shortlist_graded": (pipeline_status["shortlist_graded"]),
+        "deferred_review_enabled": (allow_deferred_review),
+        "deferred_ambiguous": (pipeline_status["deferred_review"]),
         "input_counts": input_counts,
-        "accepted_by_source": dict(
-            accepted_by_source
-        ),
-        "duplicates_removed": dict(
-            duplicates_removed
-        ),
-        "quality_rejections": dict(
-            quality_rejections
-        ),
+        "accepted_by_source": dict(accepted_by_source),
+        "duplicates_removed": dict(duplicates_removed),
+        "quality_rejections": dict(quality_rejections),
         "final_corpus_size": final_count,
         "target_papers": target_papers,
-        "difference_from_target": (
-            final_count - target_papers
-        ),
+        "difference_from_target": (final_count - target_papers),
         "remaining_gap": max(
             target_papers - final_count,
             0,
         ),
-        "content_coverage": (
-            content_counts
-        ),
-        "output_path": str(
-            output_path
-        ),
+        "content_coverage": (content_counts),
+        "output_path": str(output_path),
     }
 
     write_json(

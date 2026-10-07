@@ -233,9 +233,7 @@ def parse_division_tree(
 
     if text:
         section = PaperSection(
-            section_id=(
-                f"{paper_id}-section-{current_order}"
-            ),
+            section_id=(f"{paper_id}-section-{current_order}"),
             heading=heading,
             text=text,
             section_type=classify_section_type(heading),
@@ -250,13 +248,11 @@ def parse_division_tree(
         if local_name(child.tag) != "div":
             continue
 
-        child_sections, current_order = (
-            parse_division_tree(
-                division=child,
-                paper_id=paper_id,
-                level=level + 1,
-                starting_order=current_order,
-            )
+        child_sections, current_order = parse_division_tree(
+            division=child,
+            paper_id=paper_id,
+            level=level + 1,
+            starting_order=current_order,
         )
 
         sections.extend(child_sections)
@@ -297,13 +293,11 @@ def extract_sections(
         if local_name(child.tag) != "div":
             continue
 
-        child_sections, current_order = (
-            parse_division_tree(
-                division=child,
-                paper_id=paper_id,
-                level=1,
-                starting_order=current_order,
-            )
+        child_sections, current_order = parse_division_tree(
+            division=child,
+            paper_id=paper_id,
+            level=1,
+            starting_order=current_order,
         )
 
         sections.extend(child_sections)
@@ -339,23 +333,17 @@ def parse_tei_file(
         metadata = {}
 
     if not xml_path.exists():
-        raise TEIParsingError(
-            f"TEI XML file does not exist: {xml_path}"
-        )
+        raise TEIParsingError(f"TEI XML file does not exist: {xml_path}")
 
     try:
         tree = ET.parse(xml_path)
     except (ET.ParseError, OSError) as error:
-        raise TEIParsingError(
-            f"Invalid TEI XML file: {xml_path}"
-        ) from error
+        raise TEIParsingError(f"Invalid TEI XML file: {xml_path}") from error
 
     root = tree.getroot()
 
     if local_name(root.tag) != "tei":
-        raise TEIParsingError(
-            f"Unexpected TEI root element: {root.tag}"
-        )
+        raise TEIParsingError(f"Unexpected TEI root element: {root.tag}")
 
     warnings: list[str] = []
 
@@ -371,9 +359,7 @@ def parse_tei_file(
     abstract = extract_abstract(root)
 
     if abstract is None:
-        abstract = optional_string(
-            metadata.get("abstract")
-        )
+        abstract = optional_string(metadata.get("abstract"))
 
     if abstract is None:
         warnings.append("missing_abstract")
@@ -383,14 +369,10 @@ def parse_tei_file(
     if doi is None:
         doi = extract_doi(root)
 
-    publication_year = optional_year(
-        metadata.get("publication_year")
-    )
+    publication_year = optional_year(metadata.get("publication_year"))
 
     if publication_year is None:
-        publication_year = optional_year(
-            metadata.get("year")
-        )
+        publication_year = optional_year(metadata.get("year"))
 
     if publication_year is None:
         publication_year = extract_publication_year(root)

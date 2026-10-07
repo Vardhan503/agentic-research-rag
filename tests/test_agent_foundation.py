@@ -22,9 +22,7 @@ class FakeOllamaClient:
 
     def chat(self, **kwargs):
         self.calls.append(kwargs)
-        return SimpleNamespace(
-            message=SimpleNamespace(content=self.content)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=self.content))
 
 
 def create_candidate() -> RetrievalCandidate:
@@ -57,9 +55,7 @@ def create_candidate() -> RetrievalCandidate:
 
 
 def test_structured_client_validates_response() -> None:
-    fake_client = FakeOllamaClient(
-        '{"retrieve": true, "reason": "Evidence is required."}'
-    )
+    fake_client = FakeOllamaClient('{"retrieve": true, "reason": "Evidence is required."}')
 
     client = OllamaStructuredClient(
         model="qwen3:14b",
@@ -89,9 +85,7 @@ def test_candidate_is_converted_to_scientific_evidence() -> None:
 
 
 def test_merge_evidence_removes_duplicate_chunks() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
 
     merged = merge_evidence([document], [document])
 
@@ -99,9 +93,7 @@ def test_merge_evidence_removes_duplicate_chunks() -> None:
 
 
 def test_context_contains_citation_metadata() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
 
     context = build_context([document])
 

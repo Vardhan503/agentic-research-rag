@@ -103,13 +103,9 @@ def write_chunks(
 
 
 def test_build_fts_query_removes_query_syntax() -> None:
-    query = build_fts_query(
-        'dense-retrieval: "RAG" dense'
-    )
+    query = build_fts_query('dense-retrieval: "RAG" dense')
 
-    assert query == (
-        '"dense" OR "retrieval" OR "rag"'
-    )
+    assert query == ('"dense" OR "retrieval" OR "rag"')
 
 
 def test_reciprocal_rank_fusion_rewards_overlap() -> None:
@@ -261,9 +257,7 @@ def test_build_and_search_small_index(
     assert index.ntotal == 2
 
     connection = sqlite3.connect(sqlite_path)
-    row = connection.execute(
-        "SELECT COUNT(*) FROM chunks"
-    ).fetchone()
+    row = connection.execute("SELECT COUNT(*) FROM chunks").fetchone()
     connection.close()
 
     assert row is not None

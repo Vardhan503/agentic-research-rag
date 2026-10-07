@@ -21,9 +21,7 @@ class SequenceOllamaClient:
     def chat(self, **_kwargs: Any):
         response = self.responses[self.call_count]
         self.call_count += 1
-        return SimpleNamespace(
-            message=SimpleNamespace(content=response)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=response))
 
 
 def create_document(
@@ -94,7 +92,7 @@ def test_missing_source_grade_is_rejected() -> None:
                 {
                     "source_id": "source-1",
                     "grade": "correct",
-                                        "reason": "Useful evidence.",
+                    "reason": "Useful evidence.",
                 }
             ]
         }
@@ -156,9 +154,7 @@ def test_sufficient_context_routes_correct() -> None:
       "missing_information": ""
     }
     """
-    llm, client = create_llm(
-        [grading_response, context_response]
-    )
+    llm, client = create_llm([grading_response, context_response])
 
     result = run_crag_assessment(
         question="How does CRAG recover from failure?",
@@ -194,9 +190,7 @@ def test_incomplete_context_routes_ambiguous() -> None:
       "missing_information": "How the failed retrieval is corrected."
     }
     """
-    llm, _client = create_llm(
-        [grading_response, context_response]
-    )
+    llm, _client = create_llm([grading_response, context_response])
 
     result = run_crag_assessment(
         question="How is failure detected and corrected?",
@@ -206,4 +200,3 @@ def test_incomplete_context_routes_ambiguous() -> None:
 
     assert result.route == "ambiguous"
     assert "corrected" in result.missing_information
-

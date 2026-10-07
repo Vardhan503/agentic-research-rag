@@ -122,77 +122,38 @@ def main():
     positive_rejected = []
     negative_rejected = []
 
-    for index, paper in enumerate(
-        POSITIVE_CONTROLS
-    ):
+    for index, paper in enumerate(POSITIVE_CONTROLS):
         if index in rejected_index_set:
-            positive_rejected.append(
-                paper["title"]
-            )
+            positive_rejected.append(paper["title"])
 
-    negative_start = len(
-        POSITIVE_CONTROLS
-    )
+    negative_start = len(POSITIVE_CONTROLS)
 
-    for offset, paper in enumerate(
-        NEGATIVE_CONTROLS
-    ):
-        combined_index = (
-            negative_start + offset
-        )
+    for offset, paper in enumerate(NEGATIVE_CONTROLS):
+        combined_index = negative_start + offset
 
         if combined_index in rejected_index_set:
-            negative_rejected.append(
-                paper["title"]
-            )
+            negative_rejected.append(paper["title"])
 
-    positive_kept = (
-        len(POSITIVE_CONTROLS)
-        - len(positive_rejected)
-    )
+    positive_kept = len(POSITIVE_CONTROLS) - len(positive_rejected)
 
     report = {
-        "positive_controls": len(
-            POSITIVE_CONTROLS
-        ),
+        "positive_controls": len(POSITIVE_CONTROLS),
         "positive_controls_kept": positive_kept,
-        "positive_controls_rejected": len(
-            positive_rejected
-        ),
-        "positive_recall": (
-            positive_kept
-            / len(POSITIVE_CONTROLS)
-        ),
-        "negative_controls": len(
-            NEGATIVE_CONTROLS
-        ),
-        "negative_controls_rejected": len(
-            negative_rejected
-        ),
-        "negative_rejection_rate": (
-            len(negative_rejected)
-            / len(NEGATIVE_CONTROLS)
-        ),
-        "false_rejected_positive_titles": (
-            positive_rejected
-        ),
-        "rejected_negative_titles": (
-            negative_rejected
-        ),
+        "positive_controls_rejected": len(positive_rejected),
+        "positive_recall": (positive_kept / len(POSITIVE_CONTROLS)),
+        "negative_controls": len(NEGATIVE_CONTROLS),
+        "negative_controls_rejected": len(negative_rejected),
+        "negative_rejection_rate": (len(negative_rejected) / len(NEGATIVE_CONTROLS)),
+        "false_rejected_positive_titles": (positive_rejected),
+        "rejected_negative_titles": (negative_rejected),
     }
 
     print(json.dumps(report, indent=2))
 
     if positive_rejected:
-        raise SystemExit(
-            "Validation failed: at least one "
-            "positive control was rejected."
-        )
+        raise SystemExit("Validation failed: at least one positive control was rejected.")
 
-    print(
-        "\nValidation passed: every known "
-        "retrieval paper was kept."
-    )
+    print("\nValidation passed: every known retrieval paper was kept.")
 
 
 if __name__ == "__main__":

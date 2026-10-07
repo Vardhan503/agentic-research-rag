@@ -32,9 +32,7 @@ class SequenceOllamaClient:
     def chat(self, **_kwargs: Any):
         response = self.responses[self.call_count]
         self.call_count += 1
-        return SimpleNamespace(
-            message=SimpleNamespace(content=response)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=response))
 
 
 def create_corrective_result(
@@ -145,9 +143,7 @@ def test_incorrect_route_searches_and_regrades_web_evidence() -> None:
     fake_tavily = FakeTavilyClient(raw_results)
     web_search = TavilyWebSearch(client=fake_tavily)
 
-    web_source_id = convert_tavily_results(
-        raw_results
-    )[0].source_id
+    web_source_id = convert_tavily_results(raw_results)[0].source_id
     grading_response = (
         '{"grades":[{"source_id":"'
         + web_source_id
@@ -161,9 +157,7 @@ def test_incorrect_route_searches_and_regrades_web_evidence() -> None:
       "missing_information": ""
     }
     """
-    llm, client = create_llm(
-        [grading_response, context_response]
-    )
+    llm, client = create_llm([grading_response, context_response])
 
     result = run_web_fallback(
         question="How does corrective RAG recover?",

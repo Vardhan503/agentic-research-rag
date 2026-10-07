@@ -12,20 +12,14 @@ from agentic_rag.ingestion.oa_location_enricher import (
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description=(
-            "Enrich the final corpus with "
-            "open-access PDF locations."
-        )
+        description=("Enrich the final corpus with open-access PDF locations.")
     )
 
     parser.add_argument(
         "--limit",
         type=int,
         default=None,
-        help=(
-            "Maximum number of new papers "
-            "to enrich."
-        ),
+        help=("Maximum number of new papers to enrich."),
     )
 
     return parser.parse_args()

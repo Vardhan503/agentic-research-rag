@@ -20,9 +20,7 @@ class SequenceOllamaClient:
     def chat(self, **_kwargs: Any):
         response = self.responses[self.call_count]
         self.call_count += 1
-        return SimpleNamespace(
-            message=SimpleNamespace(content=response)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=response))
 
 
 class SequenceRetriever:
@@ -89,10 +87,7 @@ def grading_response(
 
     for source_id in source_ids:
         item = (
-            '{"source_id":"'
-            + source_id
-            + '","grade":"correct",'
-            + '"reason":"Useful evidence."}'
+            '{"source_id":"' + source_id + '","grade":"correct",' + '"reason":"Useful evidence."}'
         )
         items.append(item)
 
@@ -135,9 +130,7 @@ def test_repeated_model_query_uses_fallback() -> None:
         llm=llm,
     )
 
-    assert result.rewritten_query == (
-        "adaptive RAG failure query rewriting recovery method"
-    )
+    assert result.rewritten_query == ("adaptive RAG failure query rewriting recovery method")
 
 
 def test_ambiguous_context_is_rewritten_and_retrieved() -> None:
@@ -149,9 +142,7 @@ def test_ambiguous_context_is_rewritten_and_retrieved() -> None:
         "source-2",
         "Query rewriting recovers from retrieval failure.",
     )
-    retriever = SequenceRetriever(
-        [[first_candidate], [second_candidate]]
-    )
+    retriever = SequenceRetriever([[first_candidate], [second_candidate]])
 
     responses = [
         grading_response(["source-1"]),

@@ -44,9 +44,7 @@ def convert_tavily_results(
     """Convert Tavily dictionaries into normal graph evidence."""
 
     if maximum_content_characters <= 0:
-        raise ValueError(
-            "maximum_content_characters must be positive."
-        )
+        raise ValueError("maximum_content_characters must be positive.")
 
     documents: list[EvidenceDocument] = []
     seen_urls: set[str] = set()
@@ -67,14 +65,9 @@ def convert_tavily_results(
         seen_urls.add(url)
 
         if len(content) > maximum_content_characters:
-            content = (
-                content[:maximum_content_characters].rstrip()
-                + "..."
-            )
+            content = content[:maximum_content_characters].rstrip() + "..."
 
-        title = str(
-            raw_result.get("title") or "Untitled web source"
-        ).strip()
+        title = str(raw_result.get("title") or "Untitled web source").strip()
         source_id = create_web_source_id(url)
 
         document = EvidenceDocument(
@@ -112,9 +105,7 @@ class TavilyWebSearch:
         self.max_results = max_results
         self.search_depth = search_depth
         self.topic = topic
-        self.maximum_content_characters = (
-            maximum_content_characters
-        )
+        self.maximum_content_characters = maximum_content_characters
         self.client = client
 
     @classmethod
@@ -127,9 +118,7 @@ class TavilyWebSearch:
 
         return cls(
             max_results=int(config.get("max_results", 5)),
-            search_depth=str(
-                config.get("search_depth", "advanced")
-            ),
+            search_depth=str(config.get("search_depth", "advanced")),
             topic=str(config.get("topic", "general")),
             maximum_content_characters=int(
                 config.get(
@@ -168,10 +157,7 @@ class TavilyWebSearch:
             return WebSearchResult(
                 status="unavailable",
                 query=clean_query,
-                error=(
-                    "TAVILY_API_KEY is not configured, so web "
-                    "fallback was skipped."
-                ),
+                error=("TAVILY_API_KEY is not configured, so web fallback was skipped."),
             )
 
         try:
@@ -193,9 +179,7 @@ class TavilyWebSearch:
         raw_results = response.get("results", [])
         documents = convert_tavily_results(
             raw_results=raw_results,
-            maximum_content_characters=(
-                self.maximum_content_characters
-            ),
+            maximum_content_characters=(self.maximum_content_characters),
         )
 
         if not documents:

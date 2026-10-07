@@ -20,20 +20,13 @@ def validate_chunking_settings(
     """Validate chunk size and overlap settings."""
 
     if max_tokens <= 0:
-        raise ValueError(
-            "max_tokens must be greater than zero."
-        )
+        raise ValueError("max_tokens must be greater than zero.")
 
     if overlap_tokens < 0:
-        raise ValueError(
-            "overlap_tokens cannot be negative."
-        )
+        raise ValueError("overlap_tokens cannot be negative.")
 
     if overlap_tokens >= max_tokens:
-        raise ValueError(
-            "overlap_tokens must be smaller than "
-            "max_tokens."
-        )
+        raise ValueError("overlap_tokens must be smaller than max_tokens.")
 
 
 def increment_count(
@@ -70,9 +63,7 @@ def chunk_corpus_file(
         exist_ok=True,
     )
 
-    temporary_output = output_path.with_suffix(
-        f"{output_path.suffix}.tmp"
-    )
+    temporary_output = output_path.with_suffix(f"{output_path.suffix}.tmp")
 
     papers_processed = 0
     papers_with_chunks = 0
@@ -118,16 +109,11 @@ def chunk_corpus_file(
                 if chunk.chunk_id in chunk_ids:
                     duplicate_chunk_ids += 1
 
-                    raise ValueError(
-                        "Duplicate chunk ID detected: "
-                        f"{chunk.chunk_id}"
-                    )
+                    raise ValueError(f"Duplicate chunk ID detected: {chunk.chunk_id}")
 
                 chunk_ids.add(chunk.chunk_id)
 
-                output_record = chunk.model_dump(
-                    mode="json"
-                )
+                output_record = chunk.model_dump(mode="json")
 
                 json.dump(
                     output_record,
@@ -140,26 +126,14 @@ def chunk_corpus_file(
                 total_token_count += chunk.token_count
 
                 if minimum_token_count is None:
-                    minimum_token_count = (
-                        chunk.token_count
-                    )
-                elif (
-                    chunk.token_count
-                    < minimum_token_count
-                ):
-                    minimum_token_count = (
-                        chunk.token_count
-                    )
+                    minimum_token_count = chunk.token_count
+                elif chunk.token_count < minimum_token_count:
+                    minimum_token_count = chunk.token_count
 
                 if chunk.token_count > maximum_token_count:
-                    maximum_token_count = (
-                        chunk.token_count
-                    )
+                    maximum_token_count = chunk.token_count
 
-                if (
-                    chunk.token_count
-                    < small_chunk_threshold
-                ):
+                if chunk.token_count < small_chunk_threshold:
                     small_chunks += 1
 
                 if chunk.section_type == "abstract":
@@ -176,11 +150,7 @@ def chunk_corpus_file(
                     chunk.source_format,
                 )
 
-            if (
-                progress_interval > 0
-                and papers_processed % progress_interval
-                == 0
-            ):
+            if progress_interval > 0 and papers_processed % progress_interval == 0:
                 print(
                     f"Processed papers: "
                     f"{papers_processed} / "
@@ -193,18 +163,14 @@ def chunk_corpus_file(
     average_token_count = 0.0
 
     if total_chunks > 0:
-        average_token_count = (
-            total_token_count / total_chunks
-        )
+        average_token_count = total_token_count / total_chunks
 
     if minimum_token_count is None:
         minimum_token_count = 0
 
     report = {
         "status": "complete",
-        "chunked_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "chunked_at": datetime.now(timezone.utc).isoformat(),
         "input_papers": len(paper_records),
         "papers_processed": papers_processed,
         "papers_with_chunks": papers_with_chunks,
@@ -221,12 +187,8 @@ def chunk_corpus_file(
         "average_chunk_tokens": average_token_count,
         "small_chunk_threshold": small_chunk_threshold,
         "chunks_below_small_threshold": small_chunks,
-        "section_type_distribution": (
-            section_type_distribution
-        ),
-        "source_format_distribution": (
-            source_format_distribution
-        ),
+        "section_type_distribution": (section_type_distribution),
+        "source_format_distribution": (source_format_distribution),
         "output_path": str(output_path),
     }
 

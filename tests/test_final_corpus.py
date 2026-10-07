@@ -3,6 +3,7 @@ from agentic_rag.processing.final_corpus import (
     measure_ambiguous_pipeline,
 )
 
+
 def test_pipeline_complete_after_screen_and_grade():
     ambiguous = [
         {"id": "A"},
@@ -18,15 +19,11 @@ def test_pipeline_complete_after_screen_and_grade():
     screening = [
         {
             "id": "C",
-            "ollama_screening": {
-                "decision": "clear_reject"
-            },
+            "ollama_screening": {"decision": "clear_reject"},
         }
     ]
 
-    shortlist = [
-        {"id": "B"}
-    ]
+    shortlist = [{"id": "B"}]
 
     status = measure_ambiguous_pipeline(
         ambiguous,
@@ -36,9 +33,7 @@ def test_pipeline_complete_after_screen_and_grade():
     )
 
     assert status["screening_complete"]
-    assert status[
-        "shortlist_grading_complete"
-    ]
+    assert status["shortlist_grading_complete"]
     assert status["pipeline_complete"]
 
 
@@ -48,22 +43,16 @@ def test_pipeline_incomplete_when_shortlist_not_graded():
         {"id": "B"},
     ]
 
-    graded = [
-        {"id": "A"}
-    ]
+    graded = [{"id": "A"}]
 
     screening = [
         {
             "id": "B",
-            "ollama_screening": {
-                "decision": "keep"
-            },
+            "ollama_screening": {"decision": "keep"},
         }
     ]
 
-    shortlist = [
-        {"id": "B"}
-    ]
+    shortlist = [{"id": "B"}]
 
     status = measure_ambiguous_pipeline(
         ambiguous,
@@ -73,10 +62,9 @@ def test_pipeline_incomplete_when_shortlist_not_graded():
     )
 
     assert status["screening_complete"]
-    assert not status[
-        "shortlist_grading_complete"
-    ]
+    assert not status["shortlist_grading_complete"]
     assert not status["pipeline_complete"]
+
 
 def test_incomplete_shortlist_is_counted_as_deferred():
     ambiguous = [
@@ -84,22 +72,16 @@ def test_incomplete_shortlist_is_counted_as_deferred():
         {"id": "B"},
     ]
 
-    graded = [
-        {"id": "A"}
-    ]
+    graded = [{"id": "A"}]
 
     screening = [
         {
             "id": "B",
-            "ollama_screening": {
-                "decision": "keep"
-            },
+            "ollama_screening": {"decision": "keep"},
         }
     ]
 
-    shortlist = [
-        {"id": "B"}
-    ]
+    shortlist = [{"id": "B"}]
 
     status = measure_ambiguous_pipeline(
         ambiguous,
@@ -123,10 +105,7 @@ def test_deferred_review_can_finalize_corpus():
         pipeline_status,
         allow_deferred_review=True,
     )
-    assert (
-        status
-        == "complete_with_deferred_review"
-    )
+    assert status == "complete_with_deferred_review"
 
 
 def test_incomplete_screening_stays_provisional():

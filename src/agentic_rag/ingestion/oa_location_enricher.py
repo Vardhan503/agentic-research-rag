@@ -37,9 +37,7 @@ def read_jsonl(path):
             if not stripped_line:
                 continue
 
-            records.append(
-                json.loads(stripped_line)
-            )
+            records.append(json.loads(stripped_line))
 
     return records
 
@@ -124,10 +122,7 @@ def resolve_project_path(
 
 
 def paper_key(paper):
-    value = (
-        paper.get("id")
-        or paper.get("paper_id")
-    )
+    value = paper.get("id") or paper.get("paper_id")
 
     return normalize_work_id(value)
 
@@ -135,24 +130,16 @@ def paper_key(paper):
 def collect_oa_pdf_urls(paper):
     pdf_urls = []
 
-    best_location = paper.get(
-        "best_oa_location"
-    ) or {}
+    best_location = paper.get("best_oa_location") or {}
 
-    best_pdf_url = best_location.get(
-        "pdf_url"
-    )
+    best_pdf_url = best_location.get("pdf_url")
 
-    best_is_oa = best_location.get(
-        "is_oa"
-    )
+    best_is_oa = best_location.get("is_oa")
 
     if best_pdf_url and best_is_oa is not False:
         pdf_urls.append(best_pdf_url)
 
-    locations = paper.get(
-        "locations"
-    ) or []
+    locations = paper.get("locations") or []
 
     for location in locations:
         if not location.get("is_oa"):
@@ -177,24 +164,14 @@ def merge_oa_location_data(
 
     for field_name in ENRICHMENT_FIELDS:
         if field_name in fresh_work:
-            enriched_paper[field_name] = (
-                fresh_work[field_name]
-            )
+            enriched_paper[field_name] = fresh_work[field_name]
 
-    enriched_paper[
-        "oa_location_enrichment"
-    ] = {
+    enriched_paper["oa_location_enrichment"] = {
         "source": "openalex_singleton",
-        "enriched_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "enriched_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    enriched_paper[
-        "oa_pdf_urls"
-    ] = collect_oa_pdf_urls(
-        enriched_paper
-    )
+    enriched_paper["oa_pdf_urls"] = collect_oa_pdf_urls(enriched_paper)
 
     return enriched_paper
 
@@ -229,16 +206,12 @@ def create_enrichment_report(
     with_any_oa_pdf = 0
 
     for paper in unique_enriched.values():
-        best_location = paper.get(
-            "best_oa_location"
-        ) or {}
+        best_location = paper.get("best_oa_location") or {}
 
         if best_location.get("pdf_url"):
             with_best_oa_pdf += 1
 
-        pdf_urls = paper.get(
-            "oa_pdf_urls"
-        ) or []
+        pdf_urls = paper.get("oa_pdf_urls") or []
 
         if pdf_urls:
             with_any_oa_pdf += 1
@@ -261,22 +234,11 @@ def create_enrichment_report(
         "total_final_corpus": total_input,
         "total_enriched": total_enriched,
         "remaining": remaining,
-        "with_best_oa_pdf": (
-            with_best_oa_pdf
-        ),
-        "with_any_oa_pdf": (
-            with_any_oa_pdf
-        ),
-        "without_direct_oa_pdf": (
-            total_enriched
-            - with_any_oa_pdf
-        ),
-        "failures_this_run": len(
-            failures
-        ),
-        "updated_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "with_best_oa_pdf": (with_best_oa_pdf),
+        "with_any_oa_pdf": (with_any_oa_pdf),
+        "without_direct_oa_pdf": (total_enriched - with_any_oa_pdf),
+        "failures_this_run": len(failures),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
 
     write_json(
@@ -293,22 +255,13 @@ def enrich_oa_locations(
     limit=None,
     client=None,
 ):
-    enrichment_config = config[
-        "oa_location_enrichment"
-    ]
+    enrichment_config = config["oa_location_enrichment"]
 
     if limit is None:
-        limit = int(
-            enrichment_config[
-                "default_limit"
-            ]
-        )
+        limit = int(enrichment_config["default_limit"])
 
     if limit < 1:
-        raise ValueError(
-            "Enrichment limit must be "
-            "at least 1."
-        )
+        raise ValueError("Enrichment limit must be at least 1.")
 
     input_path = resolve_project_path(
         enrichment_config["input_path"],
@@ -326,19 +279,13 @@ def enrich_oa_locations(
     )
 
     failures_path = resolve_project_path(
-        enrichment_config[
-            "failures_path"
-        ],
+        enrichment_config["failures_path"],
         project_root,
     )
 
-    input_records = read_jsonl(
-        input_path
-    )
+    input_records = read_jsonl(input_path)
 
-    processed_keys = load_processed_keys(
-        output_path
-    )
+    processed_keys = load_processed_keys(output_path)
 
     pending_records = []
 
@@ -353,16 +300,10 @@ def enrich_oa_locations(
 
         pending_records.append(paper)
 
-    selected_records = pending_records[
-        :limit
-    ]
+    selected_records = pending_records[:limit]
 
     if client is None:
-        client = OpenAlexClient(
-            max_retries=enrichment_config[
-                "max_retries"
-            ]
-        )
+        client = OpenAlexClient(max_retries=enrichment_config["max_retries"])
 
     failures = []
     newly_enriched = 0
@@ -373,16 +314,12 @@ def enrich_oa_locations(
         try:
             fresh_work = client.get_work(
                 work_id,
-                select_fields=(
-                    ENRICHMENT_FIELDS
-                ),
+                select_fields=(ENRICHMENT_FIELDS),
             )
 
-            enriched_paper = (
-                merge_oa_location_data(
-                    paper,
-                    fresh_work,
-                )
+            enriched_paper = merge_oa_location_data(
+                paper,
+                fresh_work,
             )
 
             append_jsonl(
@@ -405,9 +342,7 @@ def enrich_oa_locations(
         except Exception as error:
             failure = {
                 "work_id": work_id,
-                "title": paper.get(
-                    "title"
-                ),
+                "title": paper.get("title"),
                 "error": str(error),
             }
 
@@ -420,20 +355,14 @@ def enrich_oa_locations(
                 str(error),
             )
 
-        time.sleep(
-            enrichment_config[
-                "request_delay_seconds"
-            ]
-        )
+        time.sleep(enrichment_config["request_delay_seconds"])
 
     write_jsonl(
         failures,
         failures_path,
     )
 
-    enriched_records = read_jsonl(
-        output_path
-    )
+    enriched_records = read_jsonl(output_path)
 
     return create_enrichment_report(
         input_records,

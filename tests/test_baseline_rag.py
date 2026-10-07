@@ -36,16 +36,11 @@ class FakeOllamaClient:
         self.content = content
 
     def chat(self, **_kwargs: Any):
-        return SimpleNamespace(
-            message=SimpleNamespace(content=self.content)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=self.content))
 
 
 def create_candidate() -> RetrievalCandidate:
-    text = (
-        "Corrective RAG evaluates retrieved evidence and "
-        "rewrites unsuccessful queries."
-    )
+    text = "Corrective RAG evaluates retrieved evidence and rewrites unsuccessful queries."
 
     chunk = DocumentChunk(
         chunk_id="W1001-section-2-chunk-0",
@@ -73,9 +68,7 @@ def create_candidate() -> RetrievalCandidate:
 
 
 def test_generation_prompt_contains_exact_source_id() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
 
     prompt = build_generation_prompt(
         question="How does corrective RAG recover?",
@@ -88,9 +81,7 @@ def test_generation_prompt_contains_exact_source_id() -> None:
 
 
 def test_unknown_source_id_is_rejected() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
     generated = GeneratedAnswer(
         answer="The system rewrites queries [unknown].",
         source_ids=["unknown"],
@@ -101,9 +92,7 @@ def test_unknown_source_id_is_rejected() -> None:
 
 
 def test_declared_source_must_appear_in_answer() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
     generated = GeneratedAnswer(
         answer="The system rewrites queries.",
         source_ids=[document.source_id],
@@ -114,9 +103,7 @@ def test_declared_source_must_appear_in_answer() -> None:
 
 
 def test_citation_metadata_is_built() -> None:
-    document = EvidenceDocument.from_retrieval_candidate(
-        create_candidate()
-    )
+    document = EvidenceDocument.from_retrieval_candidate(create_candidate())
 
     citations = build_citations(
         source_ids=[document.source_id],
@@ -156,9 +143,7 @@ def test_baseline_rag_retrieves_and_generates() -> None:
 
     assert result.source_ids == [source_id]
     assert len(result.citations) == 1
-    assert retriever.received_query == (
-        "How does corrective RAG recover?"
-    )
+    assert retriever.received_query == ("How does corrective RAG recover?")
 
 
 def test_baseline_rag_handles_empty_retrieval() -> None:

@@ -29,10 +29,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
             try:
                 record = json.loads(clean_line)
             except json.JSONDecodeError as error:
-                message = (
-                    f"Invalid JSON in {path} on line "
-                    f"{line_number}: {error}"
-                )
+                message = f"Invalid JSON in {path} on line {line_number}: {error}"
                 raise ValueError(message) from error
 
             records.append(record)
@@ -311,12 +308,8 @@ def audit_local_corpus(
     inventory_output = Path(audit_config["inventory_output"])
     report_output = Path(audit_config["report_output"])
 
-    minimum_pdf_bytes = int(
-        audit_config.get("minimum_pdf_bytes", 10000)
-    )
-    minimum_xml_bytes = int(
-        audit_config.get("minimum_xml_bytes", 1000)
-    )
+    minimum_pdf_bytes = int(audit_config.get("minimum_pdf_bytes", 10000))
+    minimum_xml_bytes = int(audit_config.get("minimum_xml_bytes", 1000))
 
     corpus_records = read_jsonl(corpus_path)
 
@@ -418,14 +411,10 @@ def audit_local_corpus(
             "id": record.get("id"),
             "openalex_id": work_id,
             "title": record.get("title"),
-            "local_pdf_path": (
-                str(pdf_path) if pdf_path is not None else None
-            ),
+            "local_pdf_path": (str(pdf_path) if pdf_path is not None else None),
             "local_pdf_valid": pdf_valid,
             "local_pdf_reason": pdf_reason,
-            "local_xml_path": (
-                str(xml_path) if xml_path is not None else None
-            ),
+            "local_xml_path": (str(xml_path) if xml_path is not None else None),
             "local_xml_valid": xml_valid,
             "local_xml_type": xml_type,
             "local_xml_reason": xml_reason,
@@ -445,9 +434,7 @@ def audit_local_corpus(
         if work_id not in final_work_ids:
             orphan_files += len(paths)
 
-    duplicate_manifest_records = count_duplicate_manifest_records(
-        manifest_path
-    )
+    duplicate_manifest_records = count_duplicate_manifest_records(manifest_path)
 
     report = {
         "status": "complete",

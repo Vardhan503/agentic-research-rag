@@ -13,10 +13,7 @@ def get_audit_config(
     audit_config = project_config.get("corpus_audit")
 
     if audit_config is None:
-        raise KeyError(
-            "The corpus_audit section is missing from "
-            "configs/corpus.yaml."
-        )
+        raise KeyError("The corpus_audit section is missing from configs/corpus.yaml.")
 
     required_settings = (
         "corpus_path",
@@ -29,9 +26,7 @@ def get_audit_config(
 
     for setting in required_settings:
         if setting not in audit_config:
-            raise KeyError(
-                f"Missing corpus_audit setting: {setting}"
-            )
+            raise KeyError(f"Missing corpus_audit setting: {setting}")
 
     return audit_config
 

@@ -44,24 +44,12 @@ def screening_config(tmp_path):
         "max_retries": 1,
         "retry_delay_seconds": 0,
         "keep_alive": "30m",
-        "input_path": str(
-            tmp_path / "candidates.jsonl"
-        ),
-        "existing_graded_path": str(
-            tmp_path / "graded.jsonl"
-        ),
-        "decisions_output_path": str(
-            tmp_path / "decisions.jsonl"
-        ),
-        "shortlist_output_path": str(
-            tmp_path / "shortlist.jsonl"
-        ),
-        "rejected_output_path": str(
-            tmp_path / "rejected.jsonl"
-        ),
-        "report_path": str(
-            tmp_path / "report.json"
-        ),
+        "input_path": str(tmp_path / "candidates.jsonl"),
+        "existing_graded_path": str(tmp_path / "graded.jsonl"),
+        "decisions_output_path": str(tmp_path / "decisions.jsonl"),
+        "shortlist_output_path": str(tmp_path / "shortlist.jsonl"),
+        "rejected_output_path": str(tmp_path / "rejected.jsonl"),
+        "report_path": str(tmp_path / "report.json"),
     }
 
 
@@ -70,9 +58,7 @@ def test_build_screening_items_truncates_abstract():
         {
             "title": "Dense retrieval",
             "abstract": "123456789",
-            "selection": {
-                "relevance_score": 7
-            },
+            "selection": {"relevance_score": 7},
         }
     ]
 
@@ -111,13 +97,7 @@ def test_screen_batch_reads_structured_result(
 ):
     config = screening_config(tmp_path)
 
-    response = json.dumps(
-        {
-            "clear_reject_indexes": [
-                1
-            ]
-        }
-    )
+    response = json.dumps({"clear_reject_indexes": [1]})
 
     client = FakeClient(response)
 
@@ -153,9 +133,7 @@ def test_outputs_exclude_previously_graded(
         {"id": "C", "title": "Reject"},
     ]
 
-    graded = [
-        {"id": "A", "title": "Already graded"}
-    ]
+    graded = [{"id": "A", "title": "Already graded"}]
 
     decisions = [
         {
@@ -191,23 +169,15 @@ def test_outputs_exclude_previously_graded(
         config["decisions_output_path"],
     )
 
-    report = build_screening_outputs(
-        config
-    )
+    report = build_screening_outputs(config)
 
-    shortlist = read_jsonl(
-        config["shortlist_output_path"]
-    )
+    shortlist = read_jsonl(config["shortlist_output_path"])
 
-    rejected = read_jsonl(
-        config["rejected_output_path"]
-    )
+    rejected = read_jsonl(config["rejected_output_path"])
 
     assert report["status"] == "complete"
     assert report["previously_graded"] == 1
-    assert report[
-        "shortlisted_for_full_grading"
-    ] == 1
+    assert report["shortlisted_for_full_grading"] == 1
     assert report["clear_rejects"] == 1
     assert shortlist[0]["id"] == "B"
     assert rejected[0]["id"] == "C"

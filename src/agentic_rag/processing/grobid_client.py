@@ -34,27 +34,19 @@ def validate_pdf_input(path: Path) -> None:
     """Confirm that the input exists and looks like a PDF."""
 
     if not path.exists():
-        raise GrobidClientError(
-            f"PDF file does not exist: {path}"
-        )
+        raise GrobidClientError(f"PDF file does not exist: {path}")
 
     if not path.is_file():
-        raise GrobidClientError(
-            f"PDF path is not a file: {path}"
-        )
+        raise GrobidClientError(f"PDF path is not a file: {path}")
 
     try:
         with path.open("rb") as file:
             signature = file.read(5)
     except OSError as error:
-        raise GrobidClientError(
-            f"PDF file cannot be read: {path}"
-        ) from error
+        raise GrobidClientError(f"PDF file cannot be read: {path}") from error
 
     if signature != b"%PDF-":
-        raise GrobidClientError(
-            f"File does not have a valid PDF signature: {path}"
-        )
+        raise GrobidClientError(f"File does not have a valid PDF signature: {path}")
 
 
 def validate_tei_content(
@@ -78,6 +70,7 @@ def validate_tei_content(
 
     return True, "valid_tei_xml"
 
+
 def validate_tei_file(
     path: Path,
     minimum_bytes: int,
@@ -99,6 +92,7 @@ def validate_tei_file(
         content=content,
         minimum_bytes=minimum_bytes,
     )
+
 
 def boolean_form_value(value: bool) -> str:
     """Convert a Python boolean into a GROBID form value."""
@@ -150,9 +144,7 @@ class GrobidClient:
             )
             response.raise_for_status()
         except requests.RequestException as error:
-            raise GrobidClientError(
-                f"GROBID is not available at {self.base_url}"
-            ) from error
+            raise GrobidClientError(f"GROBID is not available at {self.base_url}") from error
 
         return response.text.strip()
 
@@ -165,18 +157,11 @@ class GrobidClient:
 
         validate_pdf_input(pdf_path)
 
-        url = (
-            f"{self.base_url}/api/"
-            "processFulltextDocument"
-        )
+        url = f"{self.base_url}/api/processFulltextDocument"
 
         form_data = {
-            "consolidateHeader": boolean_form_value(
-                self.consolidate_header
-            ),
-            "consolidateCitations": boolean_form_value(
-                self.consolidate_citations
-            ),
+            "consolidateHeader": boolean_form_value(self.consolidate_header),
+            "consolidateCitations": boolean_form_value(self.consolidate_citations),
             "includeRawAffiliations": "1",
             "includeRawCitations": "1",
         }
@@ -204,42 +189,30 @@ class GrobidClient:
                         timeout=self.timeout_seconds,
                     )
             except requests.RequestException as error:
-                last_error = (
-                    f"request_failed:{type(error).__name__}"
-                )
+                last_error = f"request_failed:{type(error).__name__}"
 
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay_seconds)
                     continue
 
-                raise GrobidClientError(
-                    f"GROBID request failed for {pdf_path}: "
-                    f"{error}"
-                ) from error
+                raise GrobidClientError(f"GROBID request failed for {pdf_path}: {error}") from error
             except OSError as error:
-                raise GrobidClientError(
-                    f"Could not open PDF file: {pdf_path}"
-                ) from error
+                raise GrobidClientError(f"Could not open PDF file: {pdf_path}") from error
 
             if response.status_code in RETRYABLE_STATUS_CODES:
-                last_error = (
-                    f"retryable_http_status:"
-                    f"{response.status_code}"
-                )
+                last_error = f"retryable_http_status:{response.status_code}"
 
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay_seconds)
                     continue
 
                 raise GrobidClientError(
-                    f"GROBID returned HTTP "
-                    f"{response.status_code} for {pdf_path}"
+                    f"GROBID returned HTTP {response.status_code} for {pdf_path}"
                 )
 
             if response.status_code != 200:
                 raise GrobidClientError(
-                    f"GROBID returned HTTP "
-                    f"{response.status_code} for {pdf_path}"
+                    f"GROBID returned HTTP {response.status_code} for {pdf_path}"
                 )
 
             valid, reason = validate_tei_content(
@@ -254,27 +227,20 @@ class GrobidClient:
                     time.sleep(self.retry_delay_seconds)
                     continue
 
-                raise GrobidClientError(
-                    f"Invalid GROBID TEI response for "
-                    f"{pdf_path}: {reason}"
-                )
+                raise GrobidClientError(f"Invalid GROBID TEI response for {pdf_path}: {reason}")
 
             output_path.parent.mkdir(
                 parents=True,
                 exist_ok=True,
             )
 
-            temporary_path = output_path.with_suffix(
-                f"{output_path.suffix}.tmp"
-            )
+            temporary_path = output_path.with_suffix(f"{output_path.suffix}.tmp")
 
             try:
                 temporary_path.write_bytes(response.content)
                 temporary_path.replace(output_path)
             except OSError as error:
-                raise GrobidClientError(
-                    f"Could not save TEI XML to {output_path}"
-                ) from error
+                raise GrobidClientError(f"Could not save TEI XML to {output_path}") from error
 
             return {
                 "status": "success",
@@ -285,7 +251,4 @@ class GrobidClient:
                 "validation": reason,
             }
 
-        raise GrobidClientError(
-            f"GROBID processing failed for {pdf_path}: "
-            f"{last_error}"
-        )
+        raise GrobidClientError(f"GROBID processing failed for {pdf_path}: {last_error}")

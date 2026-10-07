@@ -13,21 +13,15 @@ def get_unified_config(
 ) -> dict[str, Any]:
     """Get the unified parsed-corpus configuration."""
 
-    extraction_config = project_config.get(
-        "text_extraction"
-    )
+    extraction_config = project_config.get("text_extraction")
 
     if extraction_config is None:
-        raise KeyError(
-            "Missing text_extraction configuration."
-        )
+        raise KeyError("Missing text_extraction configuration.")
 
     unified_config = extraction_config.get("unified")
 
     if unified_config is None:
-        raise KeyError(
-            "Missing text_extraction.unified configuration."
-        )
+        raise KeyError("Missing text_extraction.unified configuration.")
 
     return unified_config
 
@@ -40,12 +34,8 @@ def main() -> None:
 
     report = assemble_parsed_corpus(
         corpus_path=Path(config["corpus_path"]),
-        parsed_jats_path=Path(
-            config["parsed_jats_path"]
-        ),
-        parsed_tei_path=Path(
-            config["parsed_tei_path"]
-        ),
+        parsed_jats_path=Path(config["parsed_jats_path"]),
+        parsed_tei_path=Path(config["parsed_tei_path"]),
         output_path=Path(config["output_path"]),
         report_path=Path(config["report_path"]),
     )

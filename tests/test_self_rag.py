@@ -20,9 +20,7 @@ class SequenceOllamaClient:
         self.prompts.append(str(messages[1]["content"]))
         response = self.responses[self.call_count]
         self.call_count += 1
-        return SimpleNamespace(
-            message=SimpleNamespace(content=response)
-        )
+        return SimpleNamespace(message=SimpleNamespace(content=response))
 
 
 def create_document() -> EvidenceDocument:
@@ -32,8 +30,7 @@ def create_document() -> EvidenceDocument:
         title="Corrective Retrieval-Augmented Generation",
         section_heading="Methods",
         text=(
-            "The method detects retrieval failure and rewrites the "
-            "query before retrieving again."
+            "The method detects retrieval failure and rewrites the query before retrieving again."
         ),
     )
 
@@ -49,11 +46,7 @@ def create_llm(responses: list[str]):
 
 
 def generated_answer(answer: str) -> str:
-    return (
-        '{"answer":"'
-        + answer
-        + '","source_ids":["source-1"]}'
-    )
+    return '{"answer":"' + answer + '","source_ids":["source-1"]}'
 
 
 def test_verification_prompt_contains_answer_and_evidence() -> None:
@@ -70,9 +63,7 @@ def test_verification_prompt_contains_answer_and_evidence() -> None:
 
 def test_hallucination_causes_regeneration() -> None:
     responses = [
-        generated_answer(
-            "It retrains the generator [source-1]."
-        ),
+        generated_answer("It retrains the generator [source-1]."),
         """
         {
           "grounded": false,
@@ -80,9 +71,7 @@ def test_hallucination_causes_regeneration() -> None:
           "unsupported_claims": ["It retrains the generator."]
         }
         """,
-        generated_answer(
-            "It rewrites the failed query [source-1]."
-        ),
+        generated_answer("It rewrites the failed query [source-1]."),
         """
         {
           "grounded": true,
@@ -119,9 +108,7 @@ def test_hallucination_causes_regeneration() -> None:
 
 def test_critic_can_request_more_context() -> None:
     responses = [
-        generated_answer(
-            "Failure is detected with confidence [source-1]."
-        ),
+        generated_answer("Failure is detected with confidence [source-1]."),
         """
         {
           "grounded": true,
@@ -155,9 +142,7 @@ def test_critic_can_request_more_context() -> None:
 
 def test_critic_feedback_causes_answer_rewrite() -> None:
     responses = [
-        generated_answer(
-            "It rewrites queries [source-1]."
-        ),
+        generated_answer("It rewrites queries [source-1]."),
         """
         {
           "grounded": true,
@@ -173,9 +158,7 @@ def test_critic_feedback_causes_answer_rewrite() -> None:
           "improvement_feedback": "Explain detection before recovery."
         }
         """,
-        generated_answer(
-            "It detects failure and rewrites queries [source-1]."
-        ),
+        generated_answer("It detects failure and rewrites queries [source-1]."),
         """
         {
           "grounded": true,

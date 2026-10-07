@@ -14,9 +14,7 @@ from agentic_rag.retrieval.factory import create_hybrid_retriever
 def parse_arguments() -> argparse.Namespace:
     """Read the question used to inspect CRAG grading."""
 
-    parser = argparse.ArgumentParser(
-        description="Inspect CRAG grades for retrieved evidence."
-    )
+    parser = argparse.ArgumentParser(description="Inspect CRAG grades for retrieved evidence.")
     parser.add_argument("question")
     return parser.parse_args()
 
@@ -96,10 +94,7 @@ def main() -> None:
     print("Context reason: " + assessment.context_reason)
 
     if assessment.missing_information:
-        print(
-            "Missing information: "
-            + assessment.missing_information
-        )
+        print("Missing information: " + assessment.missing_information)
 
 
 if __name__ == "__main__":

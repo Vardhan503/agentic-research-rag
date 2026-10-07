@@ -22,25 +22,14 @@ class FakeOpenAlexClient:
         self.calls.append(work_id)
 
         return {
-            "id": (
-                "https://openalex.org/"
-                + work_id
-            ),
-            "doi": (
-                "https://doi.org/"
-                "10.1000/"
-                + work_id.lower()
-            ),
+            "id": ("https://openalex.org/" + work_id),
+            "doi": ("https://doi.org/10.1000/" + work_id.lower()),
             "open_access": {
                 "is_oa": True,
             },
             "best_oa_location": {
                 "is_oa": True,
-                "pdf_url": (
-                    "https://repository.example/"
-                    + work_id
-                    + ".pdf"
-                ),
+                "pdf_url": ("https://repository.example/" + work_id + ".pdf"),
             },
             "primary_location": {},
             "locations": [],
@@ -62,46 +51,31 @@ def write_jsonl(records, path):
 
 
 def test_normalize_work_id():
-    assert normalize_work_id(
-        "https://openalex.org/W123456"
-    ) == "W123456"
+    assert normalize_work_id("https://openalex.org/W123456") == "W123456"
 
-    assert normalize_work_id(
-        "w123456"
-    ) == "W123456"
+    assert normalize_work_id("w123456") == "W123456"
 
-    assert normalize_work_id(
-        "not-an-openalex-id"
-    ) == ""
+    assert normalize_work_id("not-an-openalex-id") == ""
 
 
 def test_collect_oa_pdf_urls():
     paper = {
         "best_oa_location": {
             "is_oa": True,
-            "pdf_url": (
-                "https://example.org/best.pdf"
-            ),
+            "pdf_url": ("https://example.org/best.pdf"),
         },
         "locations": [
             {
                 "is_oa": True,
-                "pdf_url": (
-                    "https://example.org/best.pdf"
-                ),
+                "pdf_url": ("https://example.org/best.pdf"),
             },
             {
                 "is_oa": True,
-                "pdf_url": (
-                    "https://repository.org/"
-                    "copy.pdf"
-                ),
+                "pdf_url": ("https://repository.org/copy.pdf"),
             },
             {
                 "is_oa": False,
-                "pdf_url": (
-                    "https://closed.org/paper.pdf"
-                ),
+                "pdf_url": ("https://closed.org/paper.pdf"),
             },
         ],
     }
@@ -114,26 +88,16 @@ def test_collect_oa_pdf_urls():
 
 def test_merge_oa_location_data():
     original = {
-        "id": (
-            "https://openalex.org/W123"
-        ),
+        "id": ("https://openalex.org/W123"),
         "title": "Original title",
-        "final_corpus": {
-            "source": (
-                "deterministic_retained"
-            )
-        },
+        "final_corpus": {"source": ("deterministic_retained")},
     }
 
     fresh = {
-        "id": (
-            "https://openalex.org/W123"
-        ),
+        "id": ("https://openalex.org/W123"),
         "best_oa_location": {
             "is_oa": True,
-            "pdf_url": (
-                "https://example.org/paper.pdf"
-            ),
+            "pdf_url": ("https://example.org/paper.pdf"),
         },
         "locations": [],
     }
@@ -143,58 +107,32 @@ def test_merge_oa_location_data():
         fresh,
     )
 
-    assert enriched["title"] == (
-        "Original title"
-    )
+    assert enriched["title"] == ("Original title")
 
-    assert (
-        enriched["final_corpus"]["source"]
-        == "deterministic_retained"
-    )
+    assert enriched["final_corpus"]["source"] == "deterministic_retained"
 
-    assert enriched["oa_pdf_urls"] == [
-        "https://example.org/paper.pdf"
-    ]
+    assert enriched["oa_pdf_urls"] == ["https://example.org/paper.pdf"]
 
-    assert (
-        enriched[
-            "oa_location_enrichment"
-        ]["source"]
-        == "openalex_singleton"
-    )
+    assert enriched["oa_location_enrichment"]["source"] == "openalex_singleton"
 
 
 def test_enrichment_resumes(tmp_path):
-    input_path = (
-        tmp_path / "input.jsonl"
-    )
+    input_path = tmp_path / "input.jsonl"
 
-    output_path = (
-        tmp_path / "enriched.jsonl"
-    )
+    output_path = tmp_path / "enriched.jsonl"
 
-    report_path = (
-        tmp_path / "report.json"
-    )
+    report_path = tmp_path / "report.json"
 
-    failures_path = (
-        tmp_path / "failures.jsonl"
-    )
+    failures_path = tmp_path / "failures.jsonl"
 
     write_jsonl(
         [
             {
-                "id": (
-                    "https://openalex.org/"
-                    "W100"
-                ),
+                "id": ("https://openalex.org/W100"),
                 "title": "Paper one",
             },
             {
-                "id": (
-                    "https://openalex.org/"
-                    "W200"
-                ),
+                "id": ("https://openalex.org/W200"),
                 "title": "Paper two",
             },
         ],
@@ -203,18 +141,10 @@ def test_enrichment_resumes(tmp_path):
 
     config = {
         "oa_location_enrichment": {
-            "input_path": str(
-                input_path
-            ),
-            "output_path": str(
-                output_path
-            ),
-            "report_path": str(
-                report_path
-            ),
-            "failures_path": str(
-                failures_path
-            ),
+            "input_path": str(input_path),
+            "output_path": str(output_path),
+            "report_path": str(report_path),
+            "failures_path": str(failures_path),
             "default_limit": 1,
             "max_retries": 1,
             "request_delay_seconds": 0,
@@ -230,9 +160,7 @@ def test_enrichment_resumes(tmp_path):
         client=client,
     )
 
-    assert first_report[
-        "total_enriched"
-    ] == 1
+    assert first_report["total_enriched"] == 1
 
     second_report = enrich_oa_locations(
         config,
@@ -241,13 +169,9 @@ def test_enrichment_resumes(tmp_path):
         client=client,
     )
 
-    assert second_report["status"] == (
-        "complete"
-    )
+    assert second_report["status"] == ("complete")
 
-    assert second_report[
-        "total_enriched"
-    ] == 2
+    assert second_report["total_enriched"] == 2
 
     assert client.calls == [
         "W100",

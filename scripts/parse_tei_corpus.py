@@ -46,20 +46,14 @@ def main() -> None:
         )
     )
 
-    corpus_records = read_jsonl(
-        Path(tei_config["corpus_path"])
-    )
-    inventory_records = read_jsonl(
-        Path(tei_config["inventory_path"])
-    )
+    corpus_records = read_jsonl(Path(tei_config["corpus_path"]))
+    inventory_records = read_jsonl(Path(tei_config["inventory_path"]))
 
     corpus_index = build_corpus_index(corpus_records)
 
     tei_directory = Path(tei_config["tei_directory"])
     parsed_output = Path(tei_config["parsed_output"])
-    failures_output = Path(
-        tei_config["failures_output"]
-    )
+    failures_output = Path(tei_config["failures_output"])
     report_output = Path(tei_config["report_output"])
 
     parsed_records: list[dict[str, Any]] = []
@@ -116,18 +110,14 @@ def main() -> None:
                     "openalex_id": work_id,
                     "tei_path": str(tei_path),
                     "status": "insufficient_text",
-                    "character_count": (
-                        paper.content_character_count()
-                    ),
+                    "character_count": (paper.content_character_count()),
                 }
             )
             insufficient_text += 1
             continue
 
         parsed_record = paper.model_dump(mode="json")
-        parsed_record["character_count"] = (
-            paper.content_character_count()
-        )
+        parsed_record["character_count"] = paper.content_character_count()
 
         parsed_records.append(parsed_record)
         total_sections += len(paper.sections)
@@ -147,9 +137,7 @@ def main() -> None:
 
     report = {
         "status": status,
-        "processed_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
         "pdf_candidates": pdf_candidates,
         "available_tei_files": available_tei,
         "missing_tei_files": missing_tei,

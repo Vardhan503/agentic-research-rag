@@ -25,9 +25,7 @@ class FakeResponse:
 
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
-            raise requests.HTTPError(
-                f"HTTP {self.status_code}"
-            )
+            raise requests.HTTPError(f"HTTP {self.status_code}")
 
 
 class FakeSession:
@@ -68,9 +66,7 @@ class FakeSession:
 def create_pdf(path: Path) -> None:
     """Create a small file with a valid PDF signature."""
 
-    path.write_bytes(
-        b"%PDF-1.7\nTest research paper content"
-    )
+    path.write_bytes(b"%PDF-1.7\nTest research paper content")
 
 
 def create_tei_content() -> bytes:

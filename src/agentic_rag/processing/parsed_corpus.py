@@ -79,9 +79,7 @@ def assemble_parsed_corpus(
             continue
 
         output_record = paper.model_dump(mode="json")
-        output_record["character_count"] = (
-            paper.content_character_count()
-        )
+        output_record["character_count"] = paper.content_character_count()
 
         output_records.append(output_record)
 
@@ -112,9 +110,7 @@ def assemble_parsed_corpus(
 
     report = {
         "status": status,
-        "assembled_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "assembled_at": datetime.now(timezone.utc).isoformat(),
         "expected_papers": expected_papers,
         "parsed_jats_papers": jats_count,
         "parsed_tei_papers": tei_count,

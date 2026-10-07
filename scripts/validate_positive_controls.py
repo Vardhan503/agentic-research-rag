@@ -57,9 +57,7 @@ def collect_positive_candidates(paths, limit):
         for paper in papers:
             title = paper.get("title") or ""
 
-            normalized_title = " ".join(
-                title.lower().split()
-            )
+            normalized_title = " ".join(title.lower().split())
 
             if not title_matches(title):
                 continue
@@ -69,9 +67,7 @@ def collect_positive_candidates(paths, limit):
 
             candidate = dict(paper)
 
-            candidate["_validation_source"] = str(
-                input_path
-            )
+            candidate["_validation_source"] = str(input_path)
 
             candidates.append(candidate)
             seen_titles.add(normalized_title)
@@ -88,10 +84,7 @@ def parse_arguments():
     parser.add_argument(
         "--config",
         default=None,
-        help=(
-            "Corpus configuration path. "
-            "Defaults to configs/corpus.yaml."
-        ),
+        help=("Corpus configuration path. Defaults to configs/corpus.yaml."),
     )
 
     parser.add_argument(
@@ -106,25 +99,15 @@ def parse_arguments():
 def main():
     arguments = parse_arguments()
 
-    config = load_corpus_config(
-        arguments.config
-    )
+    config = load_corpus_config(arguments.config)
 
-    grading_config = config[
-        "ollama_grading"
-    ]
+    grading_config = config["ollama_grading"]
 
-    selection_config = config[
-        "selection"
-    ]
+    selection_config = config["selection"]
 
-    retained_path = resolve_project_path(
-        selection_config["retained_output"]
-    )
+    retained_path = resolve_project_path(selection_config["retained_output"])
 
-    ambiguous_path = resolve_project_path(
-        selection_config["ambiguous_output"]
-    )
+    ambiguous_path = resolve_project_path(selection_config["ambiguous_output"])
 
     input_paths = [
         retained_path,
@@ -142,15 +125,10 @@ def main():
     )
 
     if not candidates:
-        print(
-            "\nNo positive-control candidates "
-            "were found in the configured files."
-        )
+        print("\nNo positive-control candidates were found in the configured files.")
         return
 
-    client = create_ollama_client(
-        grading_config
-    )
+    client = create_ollama_client(grading_config)
 
     accepted = 0
     needs_review = 0

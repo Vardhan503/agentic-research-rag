@@ -135,10 +135,6 @@ def build_context(
     blocks: list[str] = []
 
     for document in documents:
-        blocks.append(
-            document.prompt_text(
-                maximum_characters=maximum_characters_per_document
-            )
-        )
+        blocks.append(document.prompt_text(maximum_characters=maximum_characters_per_document))
 
     return "\n\n---\n\n".join(blocks)

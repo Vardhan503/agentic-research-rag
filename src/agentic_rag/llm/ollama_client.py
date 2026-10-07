@@ -71,9 +71,7 @@ class OllamaStructuredClient:
             seed=int(config.get("seed", 42)),
             keep_alive=str(config.get("keep_alive", "30m")),
             max_retries=int(config.get("max_retries", 3)),
-            retry_delay_seconds=float(
-                config.get("retry_delay_seconds", 2.0)
-            ),
+            retry_delay_seconds=float(config.get("retry_delay_seconds", 2.0)),
             think=bool(config.get("think", False)),
             client=client,
         )

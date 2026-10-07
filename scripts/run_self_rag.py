@@ -60,9 +60,7 @@ def main() -> None:
             retriever=retriever,
             llm=llm,
             top_k=int(agent_config.get("retrieval_top_k", 10)),
-            maximum_rewrite_attempts=int(
-                agent_config.get("maximum_rewrite_attempts", 2)
-            ),
+            maximum_rewrite_attempts=int(agent_config.get("maximum_rewrite_attempts", 2)),
             maximum_grade_characters_per_document=int(
                 agent_config.get(
                     "maximum_grader_characters_per_document",
@@ -86,9 +84,7 @@ def main() -> None:
         web_search=web_search,
         llm=llm,
         enabled=bool(web_config.get("enabled", True)),
-        maximum_documents=int(
-            web_config.get("maximum_combined_documents", 12)
-        ),
+        maximum_documents=int(web_config.get("maximum_combined_documents", 12)),
         maximum_grade_characters_per_document=int(
             agent_config.get(
                 "maximum_grader_characters_per_document",
@@ -107,9 +103,7 @@ def main() -> None:
         question=arguments.question,
         documents=fallback_result.documents,
         llm=llm,
-        maximum_generation_attempts=int(
-            agent_config.get("maximum_generation_attempts", 2)
-        ),
+        maximum_generation_attempts=int(agent_config.get("maximum_generation_attempts", 2)),
         maximum_generation_characters_per_document=int(
             agent_config.get(
                 "maximum_context_characters_per_document",

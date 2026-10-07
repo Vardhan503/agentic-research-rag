@@ -102,4 +102,3 @@ def test_grade_consistency_rejects_bad_score():
         assert False
     except ValueError:
         assert True
-

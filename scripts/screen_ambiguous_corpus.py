@@ -31,11 +31,7 @@ def parse_arguments():
 def main():
     arguments = parse_arguments()
 
-    screening_config = (
-        load_ollama_screening_config(
-            arguments.config
-        )
-    )
+    screening_config = load_ollama_screening_config(arguments.config)
 
     report = screen_ambiguous_corpus(
         screening_config,

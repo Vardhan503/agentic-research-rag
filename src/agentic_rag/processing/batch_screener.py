@@ -85,8 +85,7 @@ def build_screening_prompt(items):
 
     return (
         "Screen the following papers. Return only indexes that are "
-        "clearly unrelated to textual retrieval or RAG.\n\n"
-        + serialized_items
+        "clearly unrelated to textual retrieval or RAG.\n\n" + serialized_items
     )
 
 
@@ -147,9 +146,7 @@ def screen_batch(papers, client, screening_config):
                 keep_alive=screening_config["keep_alive"],
             )
 
-            result = BatchScreenResult.model_validate_json(
-                response.message.content
-            )
+            result = BatchScreenResult.model_validate_json(response.message.content)
 
             return normalize_reject_indexes(
                 result.clear_reject_indexes,
@@ -167,10 +164,7 @@ def screen_batch(papers, client, screening_config):
             last_error = error
 
         if attempt_number < screening_config["max_retries"]:
-            wait_seconds = (
-                screening_config["retry_delay_seconds"]
-                * attempt_number
-            )
+            wait_seconds = screening_config["retry_delay_seconds"] * attempt_number
             time.sleep(wait_seconds)
 
     raise RuntimeError(
@@ -210,17 +204,11 @@ def load_paper_keys(path):
 
 
 def build_screening_outputs(screening_config):
-    candidates = read_jsonl(
-        screening_config["input_path"]
-    )
+    candidates = read_jsonl(screening_config["input_path"])
 
-    graded_keys = load_paper_keys(
-        screening_config["existing_graded_path"]
-    )
+    graded_keys = load_paper_keys(screening_config["existing_graded_path"])
 
-    decision_records = read_jsonl(
-        screening_config["decisions_output_path"]
-    )
+    decision_records = read_jsonl(screening_config["decisions_output_path"])
 
     candidate_keys = set()
 
@@ -282,9 +270,7 @@ def build_screening_outputs(screening_config):
         screening_config["rejected_output_path"],
     )
 
-    eligible_candidates = (
-        len(candidates) - previously_graded
-    )
+    eligible_candidates = len(candidates) - previously_graded
 
     screened_count = len(shortlist) + len(rejected)
 
@@ -309,14 +295,8 @@ def build_screening_outputs(screening_config):
         "clear_rejects": len(rejected),
         "fallback_kept": fallback_kept,
         "remaining_unscreened": remaining_unscreened,
-        "screening_keep_rate": (
-            len(shortlist) / screened_count
-            if screened_count
-            else 0.0
-        ),
-        "updated_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "screening_keep_rate": (len(shortlist) / screened_count if screened_count else 0.0),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
 
     write_json(
@@ -331,17 +311,11 @@ def screen_ambiguous_corpus(
     screening_config,
     limit=None,
 ):
-    candidates = read_jsonl(
-        screening_config["input_path"]
-    )
+    candidates = read_jsonl(screening_config["input_path"])
 
-    graded_keys = load_paper_keys(
-        screening_config["existing_graded_path"]
-    )
+    graded_keys = load_paper_keys(screening_config["existing_graded_path"])
 
-    processed_keys = load_paper_keys(
-        screening_config["decisions_output_path"]
-    )
+    processed_keys = load_paper_keys(screening_config["decisions_output_path"])
 
     pending = []
 
@@ -360,13 +334,9 @@ def screen_ambiguous_corpus(
         pending = pending[:limit]
 
     if not pending:
-        return build_screening_outputs(
-            screening_config
-        )
+        return build_screening_outputs(screening_config)
 
-    client = create_ollama_client(
-        screening_config
-    )
+    client = create_ollama_client(screening_config)
 
     batch_size = screening_config["batch_size"]
     newly_screened = 0
@@ -376,9 +346,7 @@ def screen_ambiguous_corpus(
         len(pending),
         batch_size,
     ):
-        batch = pending[
-            batch_start:batch_start + batch_size
-        ]
+        batch = pending[batch_start : batch_start + batch_size]
 
         fallback_keep = False
 
@@ -391,8 +359,7 @@ def screen_ambiguous_corpus(
 
         except RuntimeError as error:
             print(
-                "Screening batch failed; keeping every "
-                "paper in this batch:",
+                "Screening batch failed; keeping every paper in this batch:",
                 error,
             )
 
@@ -416,9 +383,7 @@ def screen_ambiguous_corpus(
 
             append_jsonl(
                 screened_paper,
-                screening_config[
-                    "decisions_output_path"
-                ],
+                screening_config["decisions_output_path"],
             )
 
             newly_screened += 1
@@ -430,6 +395,4 @@ def screen_ambiguous_corpus(
             len(pending),
         )
 
-    return build_screening_outputs(
-        screening_config
-    )
+    return build_screening_outputs(screening_config)

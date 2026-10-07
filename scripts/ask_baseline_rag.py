@@ -14,9 +14,7 @@ from agentic_rag.retrieval.factory import create_hybrid_retriever
 def parse_arguments() -> argparse.Namespace:
     """Read the research question and optional output mode."""
 
-    parser = argparse.ArgumentParser(
-        description="Ask a cited question over the research corpus."
-    )
+    parser = argparse.ArgumentParser(description="Ask a cited question over the research corpus.")
 
     parser.add_argument(
         "question",
@@ -81,10 +79,7 @@ def print_readable_result(result) -> None:
             print("   URL: " + citation.url)
 
     print()
-    print(
-        "Elapsed seconds: "
-        + str(round(result.elapsed_seconds, 2))
-    )
+    print("Elapsed seconds: " + str(round(result.elapsed_seconds, 2)))
 
 
 def main() -> None:

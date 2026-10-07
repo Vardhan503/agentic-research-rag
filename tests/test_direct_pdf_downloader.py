@@ -16,11 +16,7 @@ class FakeResponse:
         self.status_code = status_code
         self.content = content
         self.url = url
-        self.headers = {
-            "Content-Length": str(
-                len(content)
-            )
-        }
+        self.headers = {"Content-Length": str(len(content))}
         self.closed = False
 
     def iter_content(self, chunk_size):
@@ -29,9 +25,7 @@ class FakeResponse:
             len(self.content),
             chunk_size,
         ):
-            yield self.content[
-                start:start + chunk_size
-            ]
+            yield self.content[start : start + chunk_size]
 
     def close(self):
         self.closed = True
@@ -54,21 +48,13 @@ class FakeSession:
 
 
 def test_safe_remote_urls():
-    assert is_safe_remote_url(
-        "https://arxiv.org/pdf/1234"
-    )
+    assert is_safe_remote_url("https://arxiv.org/pdf/1234")
 
-    assert not is_safe_remote_url(
-        "file:///tmp/paper.pdf"
-    )
+    assert not is_safe_remote_url("file:///tmp/paper.pdf")
 
-    assert not is_safe_remote_url(
-        "http://localhost/paper.pdf"
-    )
+    assert not is_safe_remote_url("http://localhost/paper.pdf")
 
-    assert not is_safe_remote_url(
-        "http://127.0.0.1/paper.pdf"
-    )
+    assert not is_safe_remote_url("http://127.0.0.1/paper.pdf")
 
 
 def test_ordered_pdf_urls():
@@ -92,9 +78,7 @@ def test_existing_pdf_validation(
 ):
     pdf_path = tmp_path / "paper.pdf"
 
-    pdf_path.write_bytes(
-        b"%PDF-1.4\n" + (b"x" * 100)
-    )
+    pdf_path.write_bytes(b"%PDF-1.4\n" + (b"x" * 100))
 
     assert existing_pdf_is_valid(
         pdf_path,
@@ -105,27 +89,16 @@ def test_existing_pdf_validation(
 def test_pdf_fallback(tmp_path):
     invalid_response = FakeResponse(
         status_code=200,
-        content=(
-            b"<html>Access denied</html>"
-        ),
-        url=(
-            "https://publisher.example/"
-            "paper.pdf"
-        ),
+        content=(b"<html>Access denied</html>"),
+        url=("https://publisher.example/paper.pdf"),
     )
 
-    pdf_content = (
-        b"%PDF-1.4\n"
-        + (b"valid-pdf-content" * 20)
-    )
+    pdf_content = b"%PDF-1.4\n" + (b"valid-pdf-content" * 20)
 
     valid_response = FakeResponse(
         status_code=200,
         content=pdf_content,
-        url=(
-            "https://repository.example/"
-            "paper.pdf"
-        ),
+        url=("https://repository.example/paper.pdf"),
     )
 
     session = FakeSession(
@@ -137,20 +110,12 @@ def test_pdf_fallback(tmp_path):
 
     paper = {
         "oa_pdf_urls": [
-            (
-                "https://publisher.example/"
-                "paper.pdf"
-            ),
-            (
-                "https://repository.example/"
-                "paper.pdf"
-            ),
+            ("https://publisher.example/paper.pdf"),
+            ("https://repository.example/paper.pdf"),
         ]
     }
 
-    output_path = (
-        tmp_path / "W123.pdf"
-    )
+    output_path = tmp_path / "W123.pdf"
 
     config = {
         "connect_timeout_seconds": 10,
@@ -170,31 +135,17 @@ def test_pdf_fallback(tmp_path):
         config,
     )
 
-    assert output_path.read_bytes() == (
-        pdf_content
-    )
+    assert output_path.read_bytes() == (pdf_content)
 
-    assert result["size_bytes"] == len(
-        pdf_content
-    )
+    assert result["size_bytes"] == len(pdf_content)
 
     assert len(result["sha256"]) == 64
 
-    assert result["source_host"] == (
-        "repository.example"
-    )
+    assert result["source_host"] == ("repository.example")
 
     assert session.calls == [
-        (
-            "https://publisher.example/"
-            "paper.pdf"
-        ),
-        (
-            "https://repository.example/"
-            "paper.pdf"
-        ),
+        ("https://publisher.example/paper.pdf"),
+        ("https://repository.example/paper.pdf"),
     ]
 
-    assert not (
-        tmp_path / "W123.pdf.part"
-    ).exists()
+    assert not (tmp_path / "W123.pdf.part").exists()

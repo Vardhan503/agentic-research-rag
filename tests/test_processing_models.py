@@ -66,13 +66,12 @@ def test_parsed_papers_have_independent_lists() -> None:
 
     assert len(first_paper.sections) == 1
     assert len(second_paper.sections) == 0
-    
+
+
 def test_document_chunk_builds_embedding_text() -> None:
     """Embedding text should include paper and section context."""
 
-    text = (
-        "The retriever combines dense and sparse results."
-    )
+    text = "The retriever combines dense and sparse results."
 
     chunk = DocumentChunk(
         chunk_id="W1001-section-1-chunk-0",

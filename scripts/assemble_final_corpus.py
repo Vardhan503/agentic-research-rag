@@ -16,10 +16,7 @@ def parse_arguments():
     parser.add_argument(
         "--config",
         default=None,
-        help=(
-            "Path to corpus configuration. "
-            "Defaults to configs/corpus.yaml."
-        ),
+        help=("Path to corpus configuration. Defaults to configs/corpus.yaml."),
     )
 
     return parser.parse_args()
@@ -28,9 +25,7 @@ def parse_arguments():
 def main():
     arguments = parse_arguments()
 
-    config = load_corpus_config(
-        arguments.config
-    )
+    config = load_corpus_config(arguments.config)
 
     report = assemble_final_corpus(
         config,

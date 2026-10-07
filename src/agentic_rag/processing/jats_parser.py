@@ -273,9 +273,7 @@ def parse_section_tree(
 
     if text:
         section = PaperSection(
-            section_id=(
-                f"{paper_id}-section-{current_order}"
-            ),
+            section_id=(f"{paper_id}-section-{current_order}"),
             heading=heading,
             text=text,
             section_type=classify_section_type(heading),
@@ -409,16 +407,12 @@ def parse_jats_file(
         metadata = {}
 
     if not xml_path.exists():
-        raise JATSParsingError(
-            f"JATS XML file does not exist: {xml_path}"
-        )
+        raise JATSParsingError(f"JATS XML file does not exist: {xml_path}")
 
     try:
         tree = ET.parse(xml_path)
     except (ET.ParseError, OSError) as error:
-        raise JATSParsingError(
-            f"Invalid JATS XML file: {xml_path}"
-        ) from error
+        raise JATSParsingError(f"Invalid JATS XML file: {xml_path}") from error
 
     root = tree.getroot()
 
@@ -426,9 +420,7 @@ def parse_jats_file(
         article_element = find_first_element(root, "article")
 
         if article_element is None:
-            raise JATSParsingError(
-                f"No JATS article element found: {xml_path}"
-            )
+            raise JATSParsingError(f"No JATS article element found: {xml_path}")
 
         root = article_element
 
@@ -444,9 +436,7 @@ def parse_jats_file(
         warnings.append("missing_title")
 
     xml_abstract = extract_abstract(root)
-    metadata_abstract = optional_string(
-        metadata.get("abstract")
-    )
+    metadata_abstract = optional_string(metadata.get("abstract"))
 
     abstract = xml_abstract or metadata_abstract
 
@@ -456,16 +446,12 @@ def parse_jats_file(
     metadata_doi = optional_string(metadata.get("doi"))
     doi = metadata_doi or extract_doi(root)
 
-    metadata_year = optional_year(
-        metadata.get("publication_year")
-    )
+    metadata_year = optional_year(metadata.get("publication_year"))
 
     if metadata_year is None:
         metadata_year = optional_year(metadata.get("year"))
 
-    publication_year = (
-        metadata_year or extract_publication_year(root)
-    )
+    publication_year = metadata_year or extract_publication_year(root)
 
     sections = extract_sections(root, paper_id)
 

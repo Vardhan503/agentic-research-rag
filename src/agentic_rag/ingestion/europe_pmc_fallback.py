@@ -45,9 +45,7 @@ def normalize_doi(value):
 
     for prefix in prefixes:
         if normalized_value.startswith(prefix):
-            normalized_value = normalized_value[
-                len(prefix):
-            ]
+            normalized_value = normalized_value[len(prefix) :]
             break
 
     return normalized_value.strip()
@@ -93,14 +91,10 @@ def find_europe_pmc_record(
     session,
     fallback_config,
 ):
-    doi = normalize_doi(
-        paper.get("doi")
-    )
+    doi = normalize_doi(paper.get("doi"))
 
     if not doi:
-        raise EuropePmcFallbackError(
-            "Paper has no DOI for Europe PMC lookup."
-        )
+        raise EuropePmcFallbackError("Paper has no DOI for Europe PMC lookup.")
 
     response = None
 
@@ -116,63 +110,42 @@ def find_europe_pmc_record(
                 "Accept": "application/json",
             },
             timeout=(
-                fallback_config[
-                    "connect_timeout_seconds"
-                ],
-                fallback_config[
-                    "read_timeout_seconds"
-                ],
+                fallback_config["connect_timeout_seconds"],
+                fallback_config["read_timeout_seconds"],
             ),
         )
 
         if response.status_code >= 400:
             raise EuropePmcFallbackError(
-                "Europe PMC search returned HTTP "
-                + str(response.status_code)
-                + "."
+                "Europe PMC search returned HTTP " + str(response.status_code) + "."
             )
 
         payload = response.json()
 
         if not isinstance(payload, dict):
-            raise EuropePmcFallbackError(
-                "Europe PMC JSON payload must be an object."
-            )
+            raise EuropePmcFallbackError("Europe PMC JSON payload must be an object.")
 
     except requests.RequestException as error:
-        raise EuropePmcFallbackError(
-            "Europe PMC search request failed: "
-            + str(error)
-        ) from error
+        raise EuropePmcFallbackError("Europe PMC search request failed: " + str(error)) from error
 
     except ValueError as error:
-        raise EuropePmcFallbackError(
-            "Europe PMC search returned invalid JSON."
-        ) from error
+        raise EuropePmcFallbackError("Europe PMC search returned invalid JSON.") from error
 
     finally:
         if response is not None:
             response.close()
 
-    result_list = payload.get(
-        "resultList"
-    ) or {}
+    result_list = payload.get("resultList") or {}
 
-    results = result_list.get(
-        "result"
-    ) or []
+    results = result_list.get("result") or []
 
     for result in results:
-        result_doi = normalize_doi(
-            result.get("doi")
-        )
+        result_doi = normalize_doi(result.get("doi"))
 
         if result_doi != doi:
             continue
 
-        pmcid = str(
-            result.get("pmcid") or ""
-        ).strip().upper()
+        pmcid = str(result.get("pmcid") or "").strip().upper()
 
         if not valid_pmcid(pmcid):
             continue
@@ -188,9 +161,7 @@ def find_europe_pmc_record(
             "pmcid": pmcid,
         }
 
-    raise EuropePmcFallbackError(
-        "No open-access Europe PMC full-text record was found."
-    )
+    raise EuropePmcFallbackError("No open-access Europe PMC full-text record was found.")
 
 
 def write_validated_xml(
@@ -198,17 +169,11 @@ def write_validated_xml(
     temporary_path,
     fallback_config,
 ):
-    maximum_bytes = fallback_config[
-        "maximum_xml_bytes"
-    ]
+    maximum_bytes = fallback_config["maximum_xml_bytes"]
 
-    minimum_bytes = fallback_config[
-        "minimum_xml_bytes"
-    ]
+    minimum_bytes = fallback_config["minimum_xml_bytes"]
 
-    content_length = response.headers.get(
-        "Content-Length"
-    )
+    content_length = response.headers.get("Content-Length")
 
     if content_length:
         try:
@@ -229,20 +194,14 @@ def write_validated_xml(
         temporary_path,
         "wb",
     ) as output_file:
-        for chunk in response.iter_content(
-            chunk_size=fallback_config[
-                "chunk_size_bytes"
-            ]
-        ):
+        for chunk in response.iter_content(chunk_size=fallback_config["chunk_size_bytes"]):
             if not chunk:
                 continue
 
             total_bytes += len(chunk)
 
             if total_bytes > maximum_bytes:
-                raise EuropePmcFallbackError(
-                    "Europe PMC XML exceeded the configured maximum."
-                )
+                raise EuropePmcFallbackError("Europe PMC XML exceeded the configured maximum.")
 
             output_file.write(chunk)
             digest.update(chunk)
@@ -250,23 +209,15 @@ def write_validated_xml(
         output_file.flush()
 
     if total_bytes < minimum_bytes:
-        raise EuropePmcFallbackError(
-            "Europe PMC response is too small to be full-text XML."
-        )
+        raise EuropePmcFallbackError("Europe PMC response is too small to be full-text XML.")
 
     try:
-        tree = element_tree.parse(
-            temporary_path
-        )
+        tree = element_tree.parse(temporary_path)
     except element_tree.ParseError as error:
-        raise EuropePmcFallbackError(
-            "Europe PMC response is not valid XML."
-        ) from error
+        raise EuropePmcFallbackError("Europe PMC response is not valid XML.") from error
 
     if xml_root_name(tree) not in VALID_XML_ROOTS:
-        raise EuropePmcFallbackError(
-            "XML does not contain a JATS article or TEI root."
-        )
+        raise EuropePmcFallbackError("XML does not contain a JATS article or TEI root.")
 
     return {
         "size_bytes": total_bytes,
@@ -288,14 +239,7 @@ def download_europe_pmc_xml(
 
     pmcid = record["pmcid"]
 
-    full_text_url = (
-        fallback_config[
-            "full_text_base_url"
-        ].rstrip("/")
-        + "/"
-        + pmcid
-        + "/fullTextXML"
-    )
+    full_text_url = fallback_config["full_text_base_url"].rstrip("/") + "/" + pmcid + "/fullTextXML"
 
     output_path = Path(output_path)
     output_path.parent.mkdir(
@@ -303,9 +247,7 @@ def download_europe_pmc_xml(
         exist_ok=True,
     )
 
-    temporary_path = output_path.with_name(
-        output_path.name + ".part"
-    )
+    temporary_path = output_path.with_name(output_path.name + ".part")
 
     last_error = None
 
@@ -323,26 +265,17 @@ def download_europe_pmc_xml(
                 full_text_url,
                 stream=True,
                 headers={
-                    "Accept": (
-                        "application/xml,text/xml;"
-                        "q=0.9,*/*;q=0.1"
-                    ),
+                    "Accept": ("application/xml,text/xml;q=0.9,*/*;q=0.1"),
                 },
                 timeout=(
-                    fallback_config[
-                        "connect_timeout_seconds"
-                    ],
-                    fallback_config[
-                        "read_timeout_seconds"
-                    ],
+                    fallback_config["connect_timeout_seconds"],
+                    fallback_config["read_timeout_seconds"],
                 ),
             )
 
             if response.status_code >= 400:
                 raise EuropePmcFallbackError(
-                    "Europe PMC full text returned HTTP "
-                    + str(response.status_code)
-                    + "."
+                    "Europe PMC full text returned HTTP " + str(response.status_code) + "."
                 )
 
             result = write_validated_xml(
@@ -351,14 +284,10 @@ def download_europe_pmc_xml(
                 fallback_config,
             )
 
-            temporary_path.replace(
-                output_path
-            )
+            temporary_path.replace(output_path)
 
             result["source_url"] = full_text_url
-            result["source_host"] = (
-                "www.ebi.ac.uk"
-            )
+            result["source_host"] = "www.ebi.ac.uk"
             result["doi"] = record["doi"]
             result["pmcid"] = pmcid
 
@@ -378,16 +307,9 @@ def download_europe_pmc_xml(
             if response is not None:
                 response.close()
 
-        if attempt_number < fallback_config[
-            "max_retries"
-        ]:
-            time.sleep(
-                fallback_config[
-                    "retry_delay_seconds"
-                ] * attempt_number
-            )
+        if attempt_number < fallback_config["max_retries"]:
+            time.sleep(fallback_config["retry_delay_seconds"] * attempt_number)
 
     raise EuropePmcFallbackError(
-        "Europe PMC full-text download failed after retries: "
-        + str(last_error)
+        "Europe PMC full-text download failed after retries: " + str(last_error)
     )

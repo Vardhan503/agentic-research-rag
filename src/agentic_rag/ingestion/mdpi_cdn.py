@@ -7,9 +7,7 @@ MDPI_HOSTS = {
     "mdpi.com",
 }
 
-DEFAULT_CDN_BASE_URL = (
-    "https://mdpi-res.com/d_attachment"
-)
+DEFAULT_CDN_BASE_URL = "https://mdpi-res.com/d_attachment"
 
 # MDPI journal slugs that cannot be derived from the
 # journal display name or the DOI short code.
@@ -58,11 +56,7 @@ def mdpi_article_parts(url):
 
     path = urlparse(str(url)).path
 
-    segments = [
-        segment
-        for segment in path.split("/")
-        if segment
-    ]
+    segments = [segment for segment in path.split("/") if segment]
 
     if len(segments) < 4:
         return None
@@ -106,17 +100,11 @@ def mdpi_doi_short_code(doi):
 
 
 def journal_display_name(paper):
-    primary_location = paper.get(
-        "primary_location"
-    ) or {}
+    primary_location = paper.get("primary_location") or {}
 
-    source = primary_location.get(
-        "source"
-    ) or {}
+    source = primary_location.get("source") or {}
 
-    return str(
-        source.get("display_name") or ""
-    ).strip()
+    return str(source.get("display_name") or "").strip()
 
 
 def mdpi_slug_candidates(paper):
@@ -130,9 +118,7 @@ def mdpi_slug_candidates(paper):
     display_name = journal_display_name(paper)
     normalized_name = display_name.lower()
 
-    known_slug = KNOWN_MDPI_SLUGS.get(
-        normalized_name
-    )
+    known_slug = KNOWN_MDPI_SLUGS.get(normalized_name)
 
     if known_slug:
         candidates.append(known_slug)
@@ -147,9 +133,7 @@ def mdpi_slug_candidates(paper):
         if compact_name:
             candidates.append(compact_name)
 
-    doi_code = mdpi_doi_short_code(
-        paper.get("doi")
-    )
+    doi_code = mdpi_doi_short_code(paper.get("doi"))
 
     if doi_code:
         candidates.append(doi_code)
@@ -171,13 +155,7 @@ def build_mdpi_cdn_url(
 ):
     # MDPI zero-pads the volume to two digits and the
     # article number to five, e.g. ai-06-00226.
-    file_stem = (
-        slug
-        + "-"
-        + str(volume).zfill(2)
-        + "-"
-        + str(article).zfill(5)
-    )
+    file_stem = slug + "-" + str(volume).zfill(2) + "-" + str(article).zfill(5)
 
     return (
         base_url.rstrip("/")
@@ -233,11 +211,7 @@ class MdpiSlugResolver:
                 )
             ).lower()
 
-            if (
-                content_type
-                and "pdf" not in content_type
-                and "octet-stream" not in content_type
-            ):
+            if content_type and "pdf" not in content_type and "octet-stream" not in content_type:
                 return False
 
             return True

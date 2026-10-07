@@ -71,7 +71,8 @@ class ParsedPaper(BaseModel):
         character_count = self.content_character_count()
 
         return character_count >= minimum_characters
-    
+
+
 class DocumentChunk(BaseModel):
     """One searchable piece of a parsed research paper."""
 

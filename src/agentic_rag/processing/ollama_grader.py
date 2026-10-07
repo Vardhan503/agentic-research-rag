@@ -116,10 +116,7 @@ def build_user_prompt(paper_payload):
 
     return (
         "Classify this paper for the textual retrieval and RAG corpus.\n\n"
-        "Title:\n"
-        + title
-        + "\n\nAbstract:\n"
-        + abstract
+        "Title:\n" + title + "\n\nAbstract:\n" + abstract
     )
 
 
@@ -188,9 +185,7 @@ def grade_paper(paper, client, grading_config):
                 keep_alive=grading_config["keep_alive"],
             )
 
-            grade = PaperGrade.model_validate_json(
-                response.message.content
-            )
+            grade = PaperGrade.model_validate_json(response.message.content)
 
             validate_grade_consistency(grade)
             return grade
@@ -202,9 +197,7 @@ def grade_paper(paper, client, grading_config):
             last_error = error
 
         if attempt_number < grading_config["max_retries"]:
-            wait_seconds = (
-                grading_config["retry_delay_seconds"] * attempt_number
-            )
+            wait_seconds = grading_config["retry_delay_seconds"] * attempt_number
             time.sleep(wait_seconds)
 
     raise RuntimeError(
@@ -357,9 +350,7 @@ def read_selection_counts(grading_config):
 
 def create_grading_report(grading_config):
     accepted, needs_review, rejected = split_graded_outputs(grading_config)
-    deterministic_retained, target_papers = read_selection_counts(
-        grading_config
-    )
+    deterministic_retained, target_papers = read_selection_counts(grading_config)
 
     potential_final_corpus = deterministic_retained + len(accepted)
     remaining_gap = max(target_papers - potential_final_corpus, 0)
@@ -391,15 +382,9 @@ def grade_ambiguous_corpus(grading_config, limit=None):
     for paper in candidates:
         selected_keys.add(paper_key(paper))
 
-    processed_keys = load_processed_keys(
-        grading_config["graded_output_path"]
-    )
+    processed_keys = load_processed_keys(grading_config["graded_output_path"])
 
-    completed_selected = len(
-        selected_keys.intersection(
-            processed_keys
-        )
-    )
+    completed_selected = len(selected_keys.intersection(processed_keys))
 
     client = create_ollama_client(grading_config)
     newly_graded = 0
@@ -452,4 +437,3 @@ def grade_ambiguous_corpus(grading_config, limit=None):
     )
 
     return create_grading_report(grading_config)
-

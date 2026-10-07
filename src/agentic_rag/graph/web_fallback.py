@@ -47,18 +47,14 @@ def build_web_query(
     """Build a focused external-search query from the remaining gap."""
 
     query = corrective_result.final_query.strip()
-    missing_information = (
-        corrective_result.assessment.missing_information.strip()
-    )
+    missing_information = corrective_result.assessment.missing_information.strip()
 
     if not query:
         query = question.strip()
 
     if missing_information:
         normalized_query = " ".join(query.lower().split())
-        normalized_missing = " ".join(
-            missing_information.lower().split()
-        )
+        normalized_missing = " ".join(missing_information.lower().split())
 
         if normalized_missing not in normalized_query:
             query = query + " " + missing_information
@@ -169,12 +165,8 @@ def run_web_fallback(
         question=question,
         documents=combined_documents,
         llm=llm,
-        maximum_grade_characters_per_document=(
-            maximum_grade_characters_per_document
-        ),
-        maximum_context_characters_per_document=(
-            maximum_context_characters_per_document
-        ),
+        maximum_grade_characters_per_document=(maximum_grade_characters_per_document),
+        maximum_context_characters_per_document=(maximum_context_characters_per_document),
     )
 
     return WebFallbackResult(

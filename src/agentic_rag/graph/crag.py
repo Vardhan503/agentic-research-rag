@@ -63,12 +63,8 @@ class CRAGAssessment(BaseModel):
     """Document grades and the resulting Corrective RAG route."""
 
     route: Literal["correct", "ambiguous", "incorrect"]
-    graded_documents: list[EvidenceDocument] = Field(
-        default_factory=list
-    )
-    selected_documents: list[EvidenceDocument] = Field(
-        default_factory=list
-    )
+    graded_documents: list[EvidenceDocument] = Field(default_factory=list)
+    selected_documents: list[EvidenceDocument] = Field(default_factory=list)
     context_status: Literal[
         "sufficient",
         "incomplete",
@@ -90,17 +86,10 @@ def build_document_grading_prompt(
 
     context = build_context(
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
-    return (
-        "Question:\n"
-        + question.strip()
-        + "\n\nEvidence chunks to grade:\n"
-        + context
-    )
+    return "Question:\n" + question.strip() + "\n\nEvidence chunks to grade:\n" + context
 
 
 TOKENS_PER_GRADE_ITEM = 160
@@ -118,10 +107,7 @@ def grading_output_tokens(document_count: int) -> int:
     if document_count <= 0:
         raise ValueError("document_count must be positive.")
 
-    return (
-        GRADE_BATCH_BASE_TOKENS
-        + TOKENS_PER_GRADE_ITEM * document_count
-    )
+    return GRADE_BATCH_BASE_TOKENS + TOKENS_PER_GRADE_ITEM * document_count
 
 
 def validate_grade_batch(
@@ -141,32 +127,22 @@ def validate_grade_batch(
         source_id = grade_item.source_id
 
         if source_id not in expected_source_ids:
-            raise ValueError(
-                "Document grader returned an unknown source ID: "
-                + source_id
-            )
+            raise ValueError("Document grader returned an unknown source ID: " + source_id)
 
         if source_id in grade_index:
-            raise ValueError(
-                "Document grader returned a duplicate source ID: "
-                + source_id
-            )
+            raise ValueError("Document grader returned a duplicate source ID: " + source_id)
 
         grade_index[source_id] = (
             grade_item.grade,
             grade_item.reason,
         )
 
-    missing_source_ids = expected_source_ids.difference(
-        grade_index.keys()
-    )
+    missing_source_ids = expected_source_ids.difference(grade_index.keys())
 
     if missing_source_ids:
         missing_text = ", ".join(sorted(missing_source_ids))
 
-        raise ValueError(
-            "Document grader omitted source IDs: " + missing_text
-        )
+        raise ValueError("Document grader omitted source IDs: " + missing_text)
 
     return grade_index
 
@@ -185,9 +161,7 @@ def grade_documents(
     prompt = build_document_grading_prompt(
         question=question,
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     grade_batch = llm.invoke(
@@ -248,24 +222,15 @@ def assess_combined_context(
         return ContextAssessment(
             status="irrelevant",
             reason="No useful retrieved evidence remains.",
-            missing_information=(
-                "All evidence needed to answer the question."
-            ),
+            missing_information=("All evidence needed to answer the question."),
         )
 
     context = build_context(
         documents=documents,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
-    prompt = (
-        "Question:\n"
-        + question.strip()
-        + "\n\nSelected scientific evidence:\n"
-        + context
-    )
+    prompt = "Question:\n" + question.strip() + "\n\nSelected scientific evidence:\n" + context
 
     return llm.invoke(
         system_prompt=CONTEXT_GRADER_SYSTEM_PROMPT,
@@ -302,23 +267,17 @@ def run_crag_assessment(
             route="incorrect",
             context_status="irrelevant",
             context_reason="Hybrid retrieval returned no evidence.",
-            missing_information=(
-                "All evidence needed to answer the question."
-            ),
+            missing_information=("All evidence needed to answer the question."),
         )
 
     graded_documents = grade_documents(
         question=question,
         documents=documents,
         llm=llm,
-        maximum_characters_per_document=(
-            maximum_grade_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_grade_characters_per_document),
     )
 
-    selected_documents = select_useful_documents(
-        graded_documents
-    )
+    selected_documents = select_useful_documents(graded_documents)
 
     if not selected_documents:
         return CRAGAssessment(
@@ -326,21 +285,15 @@ def run_crag_assessment(
             graded_documents=graded_documents,
             selected_documents=[],
             context_status="irrelevant",
-            context_reason=(
-                "Every retrieved chunk was graded incorrect."
-            ),
-            missing_information=(
-                "Relevant scientific evidence for the question."
-            ),
+            context_reason=("Every retrieved chunk was graded incorrect."),
+            missing_information=("Relevant scientific evidence for the question."),
         )
 
     context_assessment = assess_combined_context(
         question=question,
         documents=selected_documents,
         llm=llm,
-        maximum_characters_per_document=(
-            maximum_context_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_context_characters_per_document),
     )
 
     route = route_context_status(context_assessment.status)
@@ -351,7 +304,5 @@ def run_crag_assessment(
         selected_documents=selected_documents,
         context_status=context_assessment.status,
         context_reason=context_assessment.reason,
-        missing_information=(
-            context_assessment.missing_information
-        ),
+        missing_information=(context_assessment.missing_information),
     )

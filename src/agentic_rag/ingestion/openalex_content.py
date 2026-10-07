@@ -68,15 +68,9 @@ def append_api_key(url, api_key):
         if key != "api_key"
     ]
 
-    query_items.append(
-        ("api_key", api_key)
-    )
+    query_items.append(("api_key", api_key))
 
-    return urlunparse(
-        parsed._replace(
-            query=urlencode(query_items)
-        )
-    )
+    return urlunparse(parsed._replace(query=urlencode(query_items)))
 
 
 def openalex_content_url(
@@ -90,24 +84,17 @@ def openalex_content_url(
     the paper has no such content or no key is available.
     """
     if kind not in CONTENT_KINDS:
-        raise ValueError(
-            "Unknown OpenAlex content kind: "
-            + str(kind)
-        )
+        raise ValueError("Unknown OpenAlex content kind: " + str(kind))
 
     if not api_key:
         return None
 
-    has_content = paper.get(
-        "has_content"
-    ) or {}
+    has_content = paper.get("has_content") or {}
 
     if not has_content.get(kind):
         return None
 
-    content_urls = paper.get(
-        "content_urls"
-    ) or {}
+    content_urls = paper.get("content_urls") or {}
 
     url = content_urls.get(kind)
 
@@ -149,9 +136,7 @@ class OpenAlexBudget:
         sleep=time.sleep,
         clock=time.monotonic,
     ):
-        self.max_wait_seconds = float(
-            max_wait_seconds
-        )
+        self.max_wait_seconds = float(max_wait_seconds)
         self.sleep = sleep
         self.clock = clock
 
@@ -235,9 +220,7 @@ class OpenAlexBudget:
 
             raise OpenAlexBudgetDeferred(
                 "OpenAlex free-tier budget exhausted; "
-                "reset in "
-                + str(int(wait_seconds))
-                + " seconds exceeds the configured "
+                "reset in " + str(int(wait_seconds)) + " seconds exceeds the configured "
                 "maximum wait."
             )
 
@@ -261,13 +244,9 @@ class OpenAlexBudget:
     def snapshot(self):
         return {
             "remaining_usd": self.remaining_usd,
-            "reset_seconds": (
-                self.seconds_until_reset()
-            ),
+            "reset_seconds": (self.seconds_until_reset()),
             "cost_usd": self.cost_usd,
-            "metered_downloads": (
-                self.metered_downloads
-            ),
+            "metered_downloads": (self.metered_downloads),
             "waits": self.waits,
             "deferred": self.deferred,
         }
@@ -287,9 +266,7 @@ def download_openalex_grobid_xml(
         exist_ok=True,
     )
 
-    temporary_path = output_path.with_name(
-        output_path.name + ".part"
-    )
+    temporary_path = output_path.with_name(output_path.name + ".part")
 
     last_error = None
 
@@ -311,12 +288,8 @@ def download_openalex_grobid_xml(
                 stream=True,
                 allow_redirects=True,
                 timeout=(
-                    xml_config[
-                        "connect_timeout_seconds"
-                    ],
-                    xml_config[
-                        "read_timeout_seconds"
-                    ],
+                    xml_config["connect_timeout_seconds"],
+                    xml_config["read_timeout_seconds"],
                 ),
             )
 
@@ -331,9 +304,7 @@ def download_openalex_grobid_xml(
 
             if response.status_code >= 400:
                 raise OpenAlexContentError(
-                    "OpenAlex content returned HTTP "
-                    + str(response.status_code)
-                    + "."
+                    "OpenAlex content returned HTTP " + str(response.status_code) + "."
                 )
 
             result = write_validated_xml(
@@ -342,19 +313,13 @@ def download_openalex_grobid_xml(
                 xml_config,
             )
 
-            temporary_path.replace(
-                output_path
-            )
+            temporary_path.replace(output_path)
 
             if budget is not None:
                 budget.record_download()
 
-            result["source_url"] = redact_api_key(
-                url
-            )
-            result["source_host"] = (
-                OPENALEX_CONTENT_HOST
-            )
+            result["source_url"] = redact_api_key(url)
+            result["source_host"] = OPENALEX_CONTENT_HOST
 
             return result
 
@@ -373,17 +338,9 @@ def download_openalex_grobid_xml(
             if response is not None:
                 response.close()
 
-        if attempt_number < xml_config[
-            "max_retries"
-        ]:
-            time.sleep(
-                xml_config[
-                    "retry_delay_seconds"
-                ] * attempt_number
-            )
+        if attempt_number < xml_config["max_retries"]:
+            time.sleep(xml_config["retry_delay_seconds"] * attempt_number)
 
     raise OpenAlexContentError(
-        "OpenAlex GROBID XML download failed "
-        "after retries: "
-        + redact_api_key(str(last_error))
+        "OpenAlex GROBID XML download failed after retries: " + redact_api_key(str(last_error))
     )

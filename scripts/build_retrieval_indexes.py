@@ -12,20 +12,13 @@ from agentic_rag.retrieval.index_builder import (
 def parse_arguments() -> argparse.Namespace:
     """Read the optional validation limit."""
 
-    parser = argparse.ArgumentParser(
-        description=(
-            "Build dense and BM25 retrieval indexes."
-        )
-    )
+    parser = argparse.ArgumentParser(description=("Build dense and BM25 retrieval indexes."))
 
     parser.add_argument(
         "--limit",
         type=int,
         default=None,
-        help=(
-            "Build a temporary-sized index using only "
-            "the first N chunks."
-        ),
+        help=("Build a temporary-sized index using only the first N chunks."),
     )
 
     return parser.parse_args()
@@ -39,10 +32,7 @@ def get_retrieval_config(
     config = project_config.get("retrieval")
 
     if config is None:
-        raise KeyError(
-            "Missing retrieval section in "
-            "configs/corpus.yaml."
-        )
+        raise KeyError("Missing retrieval section in configs/corpus.yaml.")
 
     return config
 
@@ -56,24 +46,12 @@ def main() -> None:
 
     report = build_retrieval_indexes(
         chunks_path=Path(config["chunks_path"]),
-        faiss_index_path=Path(
-            config["faiss_index_path"]
-        ),
-        sqlite_index_path=Path(
-            config["sqlite_index_path"]
-        ),
-        report_path=Path(
-            config["build_report_path"]
-        ),
-        embedding_model_name=config[
-            "embedding_model"
-        ],
-        embedding_batch_size=int(
-            config["embedding_batch_size"]
-        ),
-        minimum_index_tokens=int(
-            config["minimum_index_tokens"]
-        ),
+        faiss_index_path=Path(config["faiss_index_path"]),
+        sqlite_index_path=Path(config["sqlite_index_path"]),
+        report_path=Path(config["build_report_path"]),
+        embedding_model_name=config["embedding_model"],
+        embedding_batch_size=int(config["embedding_batch_size"]),
+        minimum_index_tokens=int(config["minimum_index_tokens"]),
         limit=arguments.limit,
     )
 

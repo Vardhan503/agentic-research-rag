@@ -45,8 +45,7 @@ def load_ollama_grading_config(config_path=None):
 
     if "ollama_grading" not in config:
         raise KeyError(
-            "Missing 'ollama_grading' section in "
-            + str(resolve_config_path(config_path))
+            "Missing 'ollama_grading' section in " + str(resolve_config_path(config_path))
         )
 
     return config["ollama_grading"]
@@ -57,8 +56,7 @@ def load_ollama_screening_config(config_path=None):
 
     if "ollama_screening" not in config:
         raise KeyError(
-            "Missing 'ollama_screening' section in "
-            + str(resolve_config_path(config_path))
+            "Missing 'ollama_screening' section in " + str(resolve_config_path(config_path))
         )
 
     return config["ollama_screening"]
@@ -70,9 +68,6 @@ def load_agentic_rag_config(config_path=None):
     config = load_corpus_config(config_path)
 
     if "agentic_rag" not in config:
-        raise KeyError(
-            "Missing 'agentic_rag' section in "
-            + str(resolve_config_path(config_path))
-        )
+        raise KeyError("Missing 'agentic_rag' section in " + str(resolve_config_path(config_path)))
 
     return config["agentic_rag"]

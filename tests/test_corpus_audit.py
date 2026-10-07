@@ -35,9 +35,7 @@ def create_test_pdf(path: Path) -> None:
 def test_extract_openalex_id() -> None:
     """OpenAlex IDs should be extracted from URLs and filenames."""
 
-    url_id = extract_openalex_id(
-        "https://openalex.org/W4389984066"
-    )
+    url_id = extract_openalex_id("https://openalex.org/W4389984066")
     filename_id = extract_openalex_id("W4406840433.pdf")
     missing_id = extract_openalex_id("paper-without-an-id.pdf")
 

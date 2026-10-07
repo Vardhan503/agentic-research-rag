@@ -47,6 +47,37 @@ class CorrectiveRetrievalResult(BaseModel):
     assessment: CRAGAssessment
 
 
+def select_corrective_evidence(
+    existing: list[EvidenceDocument],
+    incoming: list[EvidenceDocument],
+    maximum_documents: int = 12,
+) -> list[EvidenceDocument]:
+    """Combine graded evidence with a new retrieval round.
+
+    Order is: existing chunks graded correct, then newly retrieved chunks,
+    then remaining existing chunks. New evidence ranks above ambiguous
+    evidence so the cap cannot crowd out what the rewritten query found.
+    """
+
+    if maximum_documents <= 0:
+        raise ValueError("maximum_documents must be positive.")
+
+    useful_existing = [
+        document for document in existing if document.grade != "incorrect"
+    ]
+    confirmed = [
+        document for document in useful_existing if document.grade == "correct"
+    ]
+    unconfirmed = [
+        document for document in useful_existing if document.grade != "correct"
+    ]
+
+    combined = merge_evidence(existing=confirmed, incoming=incoming)
+    combined = merge_evidence(existing=combined, incoming=unconfirmed)
+
+    return combined[:maximum_documents]
+
+
 def normalize_query(query: str) -> str:
     """Normalize whitespace and case for query comparison."""
 
@@ -65,9 +96,7 @@ def build_rewrite_prompt(
     if documents:
         evidence_clues = build_context(
             documents=documents,
-            maximum_characters_per_document=(
-                maximum_characters_per_document
-            ),
+            maximum_characters_per_document=(maximum_characters_per_document),
         )
     else:
         evidence_clues = "No useful evidence clues are available."
@@ -75,9 +104,7 @@ def build_rewrite_prompt(
     missing_text = missing_information.strip()
 
     if not missing_text:
-        missing_text = (
-            "More specific scientific evidence for the question."
-        )
+        missing_text = "More specific scientific evidence for the question."
 
     return (
         "Original question:\n"
@@ -120,9 +147,7 @@ def rewrite_query(
         current_query=current_query,
         documents=documents,
         missing_information=missing_information,
-        maximum_characters_per_document=(
-            maximum_characters_per_document
-        ),
+        maximum_characters_per_document=(maximum_characters_per_document),
     )
 
     result = llm.invoke(
@@ -131,9 +156,7 @@ def rewrite_query(
         response_model=RewrittenQuery,
     )
 
-    if normalize_query(result.rewritten_query) == normalize_query(
-        current_query
-    ):
+    if normalize_query(result.rewritten_query) == normalize_query(current_query):
         fallback_query = create_fallback_query(
             current_query=current_query,
             missing_information=missing_information,
@@ -168,9 +191,7 @@ def run_corrective_retrieval(
         raise ValueError("Question cannot be empty.")
 
     if maximum_rewrite_attempts < 0:
-        raise ValueError(
-            "maximum_rewrite_attempts cannot be negative."
-        )
+        raise ValueError("maximum_rewrite_attempts cannot be negative.")
 
     current_query = clean_question
     query_history = [current_query]
@@ -186,29 +207,20 @@ def run_corrective_retrieval(
         question=clean_question,
         documents=documents,
         llm=llm,
-        maximum_grade_characters_per_document=(
-            maximum_grade_characters_per_document
-        ),
-        maximum_context_characters_per_document=(
-            maximum_context_characters_per_document
-        ),
+        maximum_grade_characters_per_document=(maximum_grade_characters_per_document),
+        maximum_context_characters_per_document=(maximum_context_characters_per_document),
     )
 
     rewrite_count = 0
 
-    while (
-        assessment.route == "ambiguous"
-        and rewrite_count < maximum_rewrite_attempts
-    ):
+    while assessment.route == "ambiguous" and rewrite_count < maximum_rewrite_attempts:
         rewritten = rewrite_query(
             question=clean_question,
             current_query=current_query,
             documents=assessment.selected_documents,
             missing_information=assessment.missing_information,
             llm=llm,
-            maximum_characters_per_document=(
-                maximum_rewrite_characters_per_document
-            ),
+            maximum_characters_per_document=(maximum_rewrite_characters_per_document),
         )
 
         current_query = rewritten.rewritten_query.strip()
@@ -231,12 +243,8 @@ def run_corrective_retrieval(
             question=clean_question,
             documents=combined_documents,
             llm=llm,
-            maximum_grade_characters_per_document=(
-                maximum_grade_characters_per_document
-            ),
-            maximum_context_characters_per_document=(
-                maximum_context_characters_per_document
-            ),
+            maximum_grade_characters_per_document=(maximum_grade_characters_per_document),
+            maximum_context_characters_per_document=(maximum_context_characters_per_document),
         )
 
     return CorrectiveRetrievalResult(

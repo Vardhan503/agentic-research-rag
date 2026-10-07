@@ -65,7 +65,7 @@ class FakeResponse:
 
     def iter_content(self, chunk_size):
         for start in range(0, len(self.content), chunk_size):
-            yield self.content[start:start + chunk_size]
+            yield self.content[start : start + chunk_size]
 
     def close(self):
         self.closed = True
@@ -81,9 +81,7 @@ class FakeSession:
         self.calls.append(url)
 
         if not self.responses:
-            raise AssertionError(
-                "Unexpected request: " + url
-            )
+            raise AssertionError("Unexpected request: " + url)
 
         return self.responses.pop(0)
 
@@ -132,9 +130,7 @@ def write_paper(tmp_path, paper):
 
 def read_jsonl(path):
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -149,9 +145,7 @@ def openalex_paper():
         "has_content": {"pdf": True, "grobid_xml": True},
         "content_urls": {
             "pdf": "https://content.openalex.org/works/W123.pdf",
-            "grobid_xml": (
-                "https://content.openalex.org/works/W123.grobid-xml"
-            ),
+            "grobid_xml": ("https://content.openalex.org/works/W123.grobid-xml"),
         },
     }
 
@@ -160,9 +154,7 @@ def openalex_paper():
 
 
 def test_mdpi_article_parts_and_cdn_url():
-    parts = mdpi_article_parts(
-        "https://www.mdpi.com/2078-2489/17/2/133/pdf?version=1"
-    )
+    parts = mdpi_article_parts("https://www.mdpi.com/2078-2489/17/2/133/pdf?version=1")
 
     assert parts == ("2078-2489", 17, 133)
 
@@ -174,21 +166,16 @@ def test_mdpi_article_parts_and_cdn_url():
 
     # Single-digit volumes are zero-padded to two digits.
     assert build_mdpi_cdn_url("ai", 6, 226) == (
-        "https://mdpi-res.com/d_attachment/ai/"
-        "ai-06-00226/article_deploy/ai-06-00226.pdf"
+        "https://mdpi-res.com/d_attachment/ai/ai-06-00226/article_deploy/ai-06-00226.pdf"
     )
 
-    assert mdpi_article_parts(
-        "https://arxiv.org/pdf/2312.10997"
-    ) is None
+    assert mdpi_article_parts("https://arxiv.org/pdf/2312.10997") is None
 
 
 def test_mdpi_slug_candidates_prefer_known_table():
     paper = {
         "doi": "https://doi.org/10.3390/app15010001",
-        "primary_location": {
-            "source": {"display_name": "Applied Sciences"}
-        },
+        "primary_location": {"source": {"display_name": "Applied Sciences"}},
     }
 
     assert mdpi_slug_candidates(paper) == [
@@ -214,28 +201,21 @@ def test_mdpi_resolver_verifies_once_per_issn():
 
     paper = {
         "doi": "https://doi.org/10.3390/app15010001",
-        "oa_pdf_urls": [
-            "https://www.mdpi.com/2076-3417/15/1/1/pdf"
-        ],
-        "primary_location": {
-            "source": {"display_name": "Applied Sciences"}
-        },
+        "oa_pdf_urls": ["https://www.mdpi.com/2076-3417/15/1/1/pdf"],
+        "primary_location": {"source": {"display_name": "Applied Sciences"}},
     }
 
     # First candidate (applsci) fails, second verifies.
     url = mdpi_cdn_url_for_paper(paper, resolver)
 
     assert url.endswith(
-        "/appliedsciences/appliedsciences-15-00001/"
-        "article_deploy/appliedsciences-15-00001.pdf"
+        "/appliedsciences/appliedsciences-15-00001/article_deploy/appliedsciences-15-00001.pdf"
     )
     assert len(session.calls) == 2
 
     # Second paper in the same journal uses the cache.
     second = dict(paper)
-    second["oa_pdf_urls"] = [
-        "https://www.mdpi.com/2076-3417/15/2/250/pdf"
-    ]
+    second["oa_pdf_urls"] = ["https://www.mdpi.com/2076-3417/15/2/250/pdf"]
 
     url = mdpi_cdn_url_for_paper(second, resolver)
 
@@ -250,12 +230,8 @@ def test_mdpi_cdn_tier_downloads(tmp_path, monkeypatch):
         "id": "https://openalex.org/W7126397257",
         "title": "MDPI paper",
         "doi": "https://doi.org/10.3390/info17020133",
-        "oa_pdf_urls": [
-            "https://www.mdpi.com/2078-2489/17/2/133/pdf"
-        ],
-        "primary_location": {
-            "source": {"display_name": "Information"}
-        },
+        "oa_pdf_urls": ["https://www.mdpi.com/2078-2489/17/2/133/pdf"],
+        "primary_location": {"source": {"display_name": "Information"}},
     }
 
     input_path = write_paper(tmp_path, paper)
@@ -282,9 +258,7 @@ def test_mdpi_cdn_tier_downloads(tmp_path, monkeypatch):
         }
     }
 
-    report = download_direct_oa_pdfs(
-        config, tmp_path, limit=1, session=session
-    )
+    report = download_direct_oa_pdfs(config, tmp_path, limit=1, session=session)
 
     assert report["new_mdpi_cdn_pdfs_downloaded"] == 1
     assert report["new_publisher_pdfs_downloaded"] == 0
@@ -306,9 +280,7 @@ def test_openalex_content_url_appends_key_and_gates():
     paper = openalex_paper()
 
     url = openalex_content_url(paper, "pdf", "SECRET")
-    assert url == (
-        "https://content.openalex.org/works/W123.pdf?api_key=SECRET"
-    )
+    assert url == ("https://content.openalex.org/works/W123.pdf?api_key=SECRET")
 
     assert openalex_content_url(paper, "pdf", "") is None
 
@@ -320,13 +292,12 @@ def test_openalex_content_url_appends_key_and_gates():
 
 
 def test_redact_api_key():
-    assert redact_api_key(
-        "https://content.openalex.org/works/W1.pdf?api_key=abc123&x=1"
-    ) == "https://content.openalex.org/works/W1.pdf?api_key=REDACTED&x=1"
-
-    assert "abc123" not in redact_api_key(
-        "HTTP 403 for ?api_key=abc123."
+    assert (
+        redact_api_key("https://content.openalex.org/works/W1.pdf?api_key=abc123&x=1")
+        == "https://content.openalex.org/works/W1.pdf?api_key=REDACTED&x=1"
     )
+
+    assert "abc123" not in redact_api_key("HTTP 403 for ?api_key=abc123.")
 
 
 def test_budget_waits_then_proceeds():
@@ -373,9 +344,10 @@ def test_budget_defers_when_wait_exceeds_maximum():
         budget.ensure_budget()
 
     assert budget.deferred == 1
-    assert classify_pdf_failure(
-        "OpenAlex free-tier budget exhausted; reset in 3005 seconds"
-    ) == "deferred_openalex_budget"
+    assert (
+        classify_pdf_failure("OpenAlex free-tier budget exhausted; reset in 3005 seconds")
+        == "deferred_openalex_budget"
+    )
 
 
 def test_publisher_403_then_openalex_pdf(tmp_path, monkeypatch):
@@ -406,9 +378,7 @@ def test_publisher_403_then_openalex_pdf(tmp_path, monkeypatch):
         }
     }
 
-    report = download_direct_oa_pdfs(
-        config, tmp_path, limit=1, session=session
-    )
+    report = download_direct_oa_pdfs(config, tmp_path, limit=1, session=session)
 
     assert report["new_openalex_pdfs_downloaded"] == 1
     assert report["remaining_without_local_full_text"] == 0
@@ -453,9 +423,7 @@ def test_grobid_xml_tier_after_pdf_failures(tmp_path, monkeypatch):
         }
     }
 
-    report = download_direct_oa_pdfs(
-        config, tmp_path, limit=1, session=session
-    )
+    report = download_direct_oa_pdfs(config, tmp_path, limit=1, session=session)
 
     assert report["new_openalex_pdfs_downloaded"] == 0
     assert report["new_openalex_grobid_xml_downloaded"] == 1
@@ -475,9 +443,7 @@ def test_no_api_key_skips_openalex_tier(tmp_path, monkeypatch):
 
     input_path = write_paper(tmp_path, openalex_paper())
 
-    session = FakeSession(
-        [FakeResponse(403, content_type="text/html")]
-    )
+    session = FakeSession([FakeResponse(403, content_type="text/html")])
 
     config = {
         "direct_pdf_download": {
@@ -486,9 +452,7 @@ def test_no_api_key_skips_openalex_tier(tmp_path, monkeypatch):
         }
     }
 
-    report = download_direct_oa_pdfs(
-        config, tmp_path, limit=1, session=session
-    )
+    report = download_direct_oa_pdfs(config, tmp_path, limit=1, session=session)
 
     assert len(session.calls) == 1
     assert report["tiers_enabled"]["openalex_content"] is False
@@ -530,15 +494,11 @@ def test_budget_exhaustion_defers_paper(tmp_path, monkeypatch):
         }
     }
 
-    report = download_direct_oa_pdfs(
-        config, tmp_path, limit=1, session=session
-    )
+    report = download_direct_oa_pdfs(config, tmp_path, limit=1, session=session)
 
     assert len(session.calls) == 2
     assert report["deferred_openalex_budget"] == 1
-    assert report["failure_categories"] == {
-        "deferred_openalex_budget": 1
-    }
+    assert report["failure_categories"] == {"deferred_openalex_budget": 1}
 
     failures = read_jsonl(tmp_path / "failures.jsonl")
     assert failures[0]["failure_category"] == "deferred_openalex_budget"

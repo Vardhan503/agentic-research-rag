@@ -37,9 +37,7 @@ class PdfDownloadError(RuntimeError):
     pass
 
 
-class RetryablePdfDownloadError(
-    PdfDownloadError
-):
+class RetryablePdfDownloadError(PdfDownloadError):
     pass
 
 
@@ -61,9 +59,7 @@ def read_jsonl(path):
             if not stripped_line:
                 continue
 
-            records.append(
-                json.loads(stripped_line)
-            )
+            records.append(json.loads(stripped_line))
 
     return records
 
@@ -146,10 +142,7 @@ def resolve_project_path(
 
 
 def paper_key(paper):
-    value = (
-        paper.get("id")
-        or paper.get("paper_id")
-    )
+    value = paper.get("id") or paper.get("paper_id")
 
     return normalize_work_id(value)
 
@@ -160,16 +153,10 @@ def build_user_agent():
         "",
     ).strip()
 
-    user_agent = (
-        "AgenticResearchRAG/0.1 "
-        "(open-access research downloader"
-    )
+    user_agent = "AgenticResearchRAG/0.1 (open-access research downloader"
 
     if contact_email:
-        user_agent += (
-            "; contact="
-            + contact_email
-        )
+        user_agent += "; contact=" + contact_email
 
     user_agent += ")"
 
@@ -201,15 +188,11 @@ def is_safe_remote_url(url):
     }:
         return False
 
-    if normalized_hostname.endswith(
-        ".local"
-    ):
+    if normalized_hostname.endswith(".local"):
         return False
 
     try:
-        address = ipaddress.ip_address(
-            normalized_hostname
-        )
+        address = ipaddress.ip_address(normalized_hostname)
 
         if not address.is_global:
             return False
@@ -222,16 +205,12 @@ def is_safe_remote_url(url):
 
 def ordered_pdf_urls(paper):
     urls = []
-    candidate_urls = paper.get(
-        "oa_pdf_urls"
-    ) or []
+    candidate_urls = paper.get("oa_pdf_urls") or []
 
     for url in candidate_urls:
         normalized_url = str(url).strip()
 
-        if not is_safe_remote_url(
-            normalized_url
-        ):
+        if not is_safe_remote_url(normalized_url):
             continue
 
         if normalized_url not in urls:
@@ -249,10 +228,7 @@ def existing_pdf_is_valid(
     if not pdf_path.exists():
         return False
 
-    if (
-        pdf_path.stat().st_size
-        < minimum_pdf_bytes
-    ):
+    if pdf_path.stat().st_size < minimum_pdf_bytes:
         return False
 
     with open(
@@ -269,28 +245,19 @@ def write_validated_pdf(
     temporary_path,
     download_config,
 ):
-    maximum_bytes = download_config[
-        "maximum_pdf_bytes"
-    ]
+    maximum_bytes = download_config["maximum_pdf_bytes"]
 
-    minimum_bytes = download_config[
-        "minimum_pdf_bytes"
-    ]
+    minimum_bytes = download_config["minimum_pdf_bytes"]
 
-    content_length = response.headers.get(
-        "Content-Length"
-    )
+    content_length = response.headers.get("Content-Length")
 
     if content_length:
         try:
-            declared_size = int(
-                content_length
-            )
+            declared_size = int(content_length)
 
             if declared_size > maximum_bytes:
                 raise PdfDownloadError(
-                    "Server declared a PDF larger "
-                    "than the maximum allowed size."
+                    "Server declared a PDF larger than the maximum allowed size."
                 )
 
         except ValueError:
@@ -303,21 +270,14 @@ def write_validated_pdf(
         temporary_path,
         "wb",
     ) as output_file:
-        for chunk in response.iter_content(
-            chunk_size=download_config[
-                "chunk_size_bytes"
-            ]
-        ):
+        for chunk in response.iter_content(chunk_size=download_config["chunk_size_bytes"]):
             if not chunk:
                 continue
 
             total_bytes += len(chunk)
 
             if total_bytes > maximum_bytes:
-                raise PdfDownloadError(
-                    "PDF exceeded the maximum "
-                    "allowed size during download."
-                )
+                raise PdfDownloadError("PDF exceeded the maximum allowed size during download.")
 
             output_file.write(chunk)
             digest.update(chunk)
@@ -325,10 +285,7 @@ def write_validated_pdf(
         output_file.flush()
 
     if total_bytes < minimum_bytes:
-        raise PdfDownloadError(
-            "Downloaded response is too small "
-            "to be a usable research PDF."
-        )
+        raise PdfDownloadError("Downloaded response is too small to be a usable research PDF.")
 
     with open(
         temporary_path,
@@ -337,10 +294,7 @@ def write_validated_pdf(
         signature = input_file.read(5)
 
     if signature != b"%PDF-":
-        raise PdfDownloadError(
-            "Downloaded response does not "
-            "have a valid PDF signature."
-        )
+        raise PdfDownloadError("Downloaded response does not have a valid PDF signature.")
 
     return {
         "size_bytes": total_bytes,
@@ -359,9 +313,7 @@ def request_pdf_to_temporary_file(
 
     for attempt_number in range(
         1,
-        download_config[
-            "max_retries_per_url"
-        ] + 1,
+        download_config["max_retries_per_url"] + 1,
     ):
         response = None
 
@@ -374,45 +326,26 @@ def request_pdf_to_temporary_file(
                 stream=True,
                 allow_redirects=True,
                 timeout=(
-                    download_config[
-                        "connect_timeout_seconds"
-                    ],
-                    download_config[
-                        "read_timeout_seconds"
-                    ],
+                    download_config["connect_timeout_seconds"],
+                    download_config["read_timeout_seconds"],
                 ),
             )
 
             if on_response is not None:
                 on_response(response)
 
-            status_code = (
-                response.status_code
-            )
+            status_code = response.status_code
 
             if status_code == 429:
-                raise (
-                    RetryablePdfDownloadError(
-                        "Remote host returned "
-                        "HTTP 429."
-                    )
-                )
+                raise (RetryablePdfDownloadError("Remote host returned HTTP 429."))
 
             if status_code >= 500:
                 raise (
-                    RetryablePdfDownloadError(
-                        "Remote host returned HTTP "
-                        + str(status_code)
-                        + "."
-                    )
+                    RetryablePdfDownloadError("Remote host returned HTTP " + str(status_code) + ".")
                 )
 
             if status_code >= 400:
-                raise PdfDownloadError(
-                    "Remote host returned HTTP "
-                    + str(status_code)
-                    + "."
-                )
+                raise PdfDownloadError("Remote host returned HTTP " + str(status_code) + ".")
 
             final_url = getattr(
                 response,
@@ -420,13 +353,8 @@ def request_pdf_to_temporary_file(
                 url,
             )
 
-            if not is_safe_remote_url(
-                final_url
-            ):
-                raise PdfDownloadError(
-                    "Remote host redirected to "
-                    "an unsafe URL."
-                )
+            if not is_safe_remote_url(final_url):
+                raise PdfDownloadError("Remote host redirected to an unsafe URL.")
 
             result = write_validated_pdf(
                 response,
@@ -452,30 +380,18 @@ def request_pdf_to_temporary_file(
             if temporary_path.exists():
                 temporary_path.unlink()
 
-            raise PdfDownloadError(
-                str(error)
-            ) from error
+            raise PdfDownloadError(str(error)) from error
 
         finally:
             if response is not None:
                 response.close()
 
-        if attempt_number < download_config[
-            "max_retries_per_url"
-        ]:
-            wait_seconds = (
-                download_config[
-                    "retry_delay_seconds"
-                ]
-                * attempt_number
-            )
+        if attempt_number < download_config["max_retries_per_url"]:
+            wait_seconds = download_config["retry_delay_seconds"] * attempt_number
 
             time.sleep(wait_seconds)
 
-    raise PdfDownloadError(
-        "PDF request failed after retries: "
-        + redact_api_key(str(last_error))
-    )
+    raise PdfDownloadError("PDF request failed after retries: " + redact_api_key(str(last_error)))
 
 
 def download_pdf_from_url(
@@ -497,9 +413,7 @@ def download_pdf_from_url(
         exist_ok=True,
     )
 
-    temporary_path = output_path.with_name(
-        output_path.name + ".part"
-    )
+    temporary_path = output_path.with_name(output_path.name + ".part")
 
     try:
         result = request_pdf_to_temporary_file(
@@ -514,17 +428,12 @@ def download_pdf_from_url(
         if temporary_path.exists():
             temporary_path.unlink()
 
-        raise PdfDownloadError(
-            redact_api_key(str(error))
-        ) from error
+        raise PdfDownloadError(redact_api_key(str(error))) from error
 
     temporary_path.replace(output_path)
 
     result["source_url"] = redact_api_key(url)
-    result["source_host"] = (
-        source_host
-        or urlparse(url).hostname
-    )
+    result["source_host"] = source_host or urlparse(url).hostname
 
     return result
 
@@ -538,9 +447,7 @@ def download_paper_pdf(
     urls = ordered_pdf_urls(paper)
 
     if not urls:
-        raise PdfDownloadError(
-            "Paper has no safe direct OA PDF URL."
-        )
+        raise PdfDownloadError("Paper has no safe direct OA PDF URL.")
 
     output_path = Path(output_path)
 
@@ -549,61 +456,38 @@ def download_paper_pdf(
         exist_ok=True,
     )
 
-    temporary_path = output_path.with_name(
-        output_path.name + ".part"
-    )
+    temporary_path = output_path.with_name(output_path.name + ".part")
 
     errors = []
 
     for index, url in enumerate(urls):
         try:
-            result = (
-                request_pdf_to_temporary_file(
-                    session,
-                    url,
-                    temporary_path,
-                    download_config,
-                )
+            result = request_pdf_to_temporary_file(
+                session,
+                url,
+                temporary_path,
+                download_config,
             )
 
-            temporary_path.replace(
-                output_path
-            )
+            temporary_path.replace(output_path)
 
             result["source_url"] = url
-            result["source_host"] = (
-                urlparse(url).hostname
-            )
+            result["source_host"] = urlparse(url).hostname
 
             return result
 
         except PdfDownloadError as error:
-            hostname = (
-                urlparse(url).hostname
-                or "unknown-host"
-            )
+            hostname = urlparse(url).hostname or "unknown-host"
 
-            errors.append(
-                hostname
-                + ": "
-                + str(error)
-            )
+            errors.append(hostname + ": " + str(error))
 
         if index < len(urls) - 1:
-            time.sleep(
-                download_config[
-                    "fallback_delay_seconds"
-                ]
-            )
+            time.sleep(download_config["fallback_delay_seconds"])
 
     if temporary_path.exists():
         temporary_path.unlink()
 
-    raise PdfDownloadError(
-        "All direct OA PDF locations "
-        "failed. "
-        + " | ".join(errors)
-    )
+    raise PdfDownloadError("All direct OA PDF locations failed. " + " | ".join(errors))
 
 
 def count_valid_local_pdfs(
@@ -619,10 +503,7 @@ def count_valid_local_pdfs(
         if not work_id:
             continue
 
-        output_path = (
-            Path(output_directory)
-            / (work_id + ".pdf")
-        )
+        output_path = Path(output_directory) / (work_id + ".pdf")
 
         if existing_pdf_is_valid(
             output_path,
@@ -646,10 +527,7 @@ def count_valid_local_xml(
         if not work_id:
             continue
 
-        output_path = (
-            Path(output_directory)
-            / (work_id + ".xml")
-        )
+        output_path = Path(output_directory) / (work_id + ".xml")
 
         if existing_xml_is_valid(
             output_path,
@@ -675,10 +553,7 @@ def count_valid_local_full_text(
         if not work_id:
             continue
 
-        pdf_path = (
-            Path(pdf_output_directory)
-            / (work_id + ".pdf")
-        )
+        pdf_path = Path(pdf_output_directory) / (work_id + ".pdf")
 
         if existing_pdf_is_valid(
             pdf_path,
@@ -690,10 +565,7 @@ def count_valid_local_full_text(
         if xml_output_directory is None:
             continue
 
-        xml_path = (
-            Path(xml_output_directory)
-            / (work_id + ".xml")
-        )
+        xml_path = Path(xml_output_directory) / (work_id + ".xml")
 
         if existing_xml_is_valid(
             xml_path,
@@ -710,10 +582,7 @@ def classify_pdf_failure(error):
     if "budget exhausted" in error_text:
         return "deferred_openalex_budget"
 
-    if (
-        "http 401" in error_text
-        or "http 403" in error_text
-    ):
+    if "http 401" in error_text or "http 403" in error_text:
         return "blocked_by_remote_host"
 
     if "http 429" in error_text:
@@ -752,41 +621,26 @@ def download_direct_oa_pdfs(
     limit=None,
     session=None,
 ):
-    download_config = config[
-        "direct_pdf_download"
-    ]
+    download_config = config["direct_pdf_download"]
 
     if limit is None:
-        limit = int(
-            download_config[
-                "default_limit"
-            ]
-        )
+        limit = int(download_config["default_limit"])
 
     if limit < 1:
-        raise ValueError(
-            "PDF download limit must be "
-            "at least 1."
-        )
+        raise ValueError("PDF download limit must be at least 1.")
 
     input_path = resolve_project_path(
         download_config["input_path"],
         project_root,
     )
 
-    output_directory = (
-        resolve_project_path(
-            download_config[
-                "output_directory"
-            ],
-            project_root,
-        )
+    output_directory = resolve_project_path(
+        download_config["output_directory"],
+        project_root,
     )
 
     manifest_path = resolve_project_path(
-        download_config[
-            "manifest_path"
-        ],
+        download_config["manifest_path"],
         project_root,
     )
 
@@ -796,17 +650,13 @@ def download_direct_oa_pdfs(
     )
 
     failures_path = resolve_project_path(
-        download_config[
-            "failures_path"
-        ],
+        download_config["failures_path"],
         project_root,
     )
 
     papers = read_jsonl(input_path)
 
-    fallback_config = download_config.get(
-        "europe_pmc_fallback"
-    ) or {}
+    fallback_config = download_config.get("europe_pmc_fallback") or {}
 
     fallback_enabled = bool(
         fallback_config.get(
@@ -815,9 +665,7 @@ def download_direct_oa_pdfs(
         )
     )
 
-    mdpi_config = download_config.get(
-        "mdpi_cdn_fallback"
-    ) or {}
+    mdpi_config = download_config.get("mdpi_cdn_fallback") or {}
 
     mdpi_enabled = bool(
         mdpi_config.get(
@@ -826,9 +674,7 @@ def download_direct_oa_pdfs(
         )
     )
 
-    openalex_config = download_config.get(
-        "openalex_content_fallback"
-    ) or {}
+    openalex_config = download_config.get("openalex_content_fallback") or {}
 
     openalex_api_key = get_openalex_api_key()
 
@@ -842,31 +688,20 @@ def download_direct_oa_pdfs(
     xml_output_directory = None
 
     if fallback_enabled:
-        xml_output_directory = (
-            resolve_project_path(
-                fallback_config[
-                    "output_directory"
-                ],
-                project_root,
-            )
+        xml_output_directory = resolve_project_path(
+            fallback_config["output_directory"],
+            project_root,
         )
 
     if openalex_enabled:
-        openalex_xml_directory = (
-            openalex_config.get(
-                "xml_output_directory"
-            )
-            or fallback_config.get(
-                "output_directory"
-            )
+        openalex_xml_directory = openalex_config.get("xml_output_directory") or fallback_config.get(
+            "output_directory"
         )
 
         if openalex_xml_directory:
-            xml_output_directory = (
-                resolve_project_path(
-                    openalex_xml_directory,
-                    project_root,
-                )
+            xml_output_directory = resolve_project_path(
+                openalex_xml_directory,
+                project_root,
             )
 
     # XML validation limits are shared by the Europe PMC
@@ -875,36 +710,26 @@ def download_direct_oa_pdfs(
         "connect_timeout_seconds": (
             openalex_config.get(
                 "connect_timeout_seconds",
-                download_config[
-                    "connect_timeout_seconds"
-                ],
+                download_config["connect_timeout_seconds"],
             )
         ),
         "read_timeout_seconds": (
             openalex_config.get(
                 "read_timeout_seconds",
-                download_config[
-                    "read_timeout_seconds"
-                ],
+                download_config["read_timeout_seconds"],
             )
         ),
         "max_retries": openalex_config.get(
             "max_retries",
-            download_config[
-                "max_retries_per_url"
-            ],
+            download_config["max_retries_per_url"],
         ),
         "retry_delay_seconds": (
             openalex_config.get(
                 "retry_delay_seconds",
-                download_config[
-                    "retry_delay_seconds"
-                ],
+                download_config["retry_delay_seconds"],
             )
         ),
-        "chunk_size_bytes": download_config[
-            "chunk_size_bytes"
-        ],
+        "chunk_size_bytes": download_config["chunk_size_bytes"],
         "minimum_xml_bytes": (
             openalex_config.get(
                 "minimum_xml_bytes",
@@ -925,9 +750,7 @@ def download_direct_oa_pdfs(
         ),
     }
 
-    minimum_xml_bytes = xml_config[
-        "minimum_xml_bytes"
-    ]
+    minimum_xml_bytes = xml_config["minimum_xml_bytes"]
 
     output_directory.mkdir(
         parents=True,
@@ -946,11 +769,7 @@ def download_direct_oa_pdfs(
     session.headers.update(
         {
             "User-Agent": build_user_agent(),
-            "Accept": (
-                "application/pdf,"
-                "application/octet-stream;"
-                "q=0.9,*/*;q=0.1"
-            ),
+            "Accept": ("application/pdf,application/octet-stream;q=0.9,*/*;q=0.1"),
         }
     )
 
@@ -961,12 +780,8 @@ def download_direct_oa_pdfs(
             session,
             mdpi_config,
             timeout=(
-                download_config[
-                    "connect_timeout_seconds"
-                ],
-                download_config[
-                    "read_timeout_seconds"
-                ],
+                download_config["connect_timeout_seconds"],
+                download_config["read_timeout_seconds"],
             ),
         )
 
@@ -979,9 +794,7 @@ def download_direct_oa_pdfs(
 
     openalex_delay = openalex_config.get(
         "request_delay_seconds",
-        download_config[
-            "request_delay_seconds"
-        ],
+        download_config["request_delay_seconds"],
     )
 
     attempted = 0
@@ -1011,26 +824,16 @@ def download_direct_oa_pdfs(
             "content_format": content_format,
             "tier": tier,
             "local_path": str(local_path),
-            "source_url": redact_api_key(
-                result.get("source_url")
-            ),
-            "source_host": result.get(
-                "source_host"
-            ),
-            "size_bytes": result.get(
-                "size_bytes"
-            ),
+            "source_url": redact_api_key(result.get("source_url")),
+            "source_host": result.get("source_host"),
+            "size_bytes": result.get("size_bytes"),
             "sha256": result.get("sha256"),
-            "downloaded_at": datetime.now(
-                UTC
-            ).isoformat(),
+            "downloaded_at": datetime.now(UTC).isoformat(),
         }
 
         for key in ("doi", "pmcid"):
             if key in result:
-                manifest_record[key] = result[
-                    key
-                ]
+                manifest_record[key] = result[key]
 
         append_jsonl(
             manifest_record,
@@ -1044,27 +847,17 @@ def download_direct_oa_pdfs(
             failures.append(
                 {
                     "work_id": "",
-                    "title": paper.get(
-                        "title"
-                    ),
-                    "error": (
-                        "Invalid OpenAlex "
-                        "work ID."
-                    ),
+                    "title": paper.get("title"),
+                    "error": ("Invalid OpenAlex work ID."),
                 }
             )
             continue
 
-        output_path = (
-            output_directory
-            / (work_id + ".pdf")
-        )
+        output_path = output_directory / (work_id + ".pdf")
 
         if existing_pdf_is_valid(
             output_path,
-            download_config[
-                "minimum_pdf_bytes"
-            ],
+            download_config["minimum_pdf_bytes"],
         ):
             skipped_existing += 1
             continue
@@ -1072,10 +865,7 @@ def download_direct_oa_pdfs(
         xml_output_path = None
 
         if xml_output_directory is not None:
-            xml_output_path = (
-                xml_output_directory
-                / (work_id + ".xml")
-            )
+            xml_output_path = xml_output_directory / (work_id + ".xml")
 
             if existing_xml_is_valid(
                 xml_output_path,
@@ -1098,9 +888,7 @@ def download_direct_oa_pdfs(
         # Tier 1: publisher / repository OA PDF URLs.
         if not urls:
             missing_urls += 1
-            tier_errors.append(
-                "Paper has no safe direct OA PDF URL."
-            )
+            tier_errors.append("Paper has no safe direct OA PDF URL.")
         else:
             attempted_tiers.append("publisher_pdf")
 
@@ -1181,26 +969,18 @@ def download_direct_oa_pdfs(
                     )
 
                 except PdfDownloadError as error:
-                    tier_errors.append(
-                        "MDPI CDN: " + str(error)
-                    )
+                    tier_errors.append("MDPI CDN: " + str(error))
 
         # Tier 3: Europe PMC JATS XML.
-        if (
-            not resolved
-            and fallback_enabled
-            and xml_output_path is not None
-        ):
+        if not resolved and fallback_enabled and xml_output_path is not None:
             attempted_tiers.append("europe_pmc_xml")
 
             try:
-                fallback_result = (
-                    download_europe_pmc_xml(
-                        paper,
-                        session,
-                        xml_output_path,
-                        fallback_config,
-                    )
+                fallback_result = download_europe_pmc_xml(
+                    paper,
+                    session,
+                    xml_output_path,
+                    fallback_config,
                 )
 
                 record_manifest(
@@ -1227,10 +1007,7 @@ def download_direct_oa_pdfs(
                 )
 
             except EuropePmcFallbackError as error:
-                tier_errors.append(
-                    "Europe PMC fallback: "
-                    + str(error)
-                )
+                tier_errors.append("Europe PMC fallback: " + str(error))
 
         # Tier 4: OpenAlex content PDF (metered).
         deferred = False
@@ -1243,9 +1020,7 @@ def download_direct_oa_pdfs(
             )
 
             if content_pdf_url:
-                attempted_tiers.append(
-                    "openalex_content_pdf"
-                )
+                attempted_tiers.append("openalex_content_pdf")
 
                 try:
                     budget.ensure_budget()
@@ -1255,17 +1030,13 @@ def download_direct_oa_pdfs(
                         content_pdf_url,
                         output_path,
                         download_config,
-                        source_host=(
-                            OPENALEX_CONTENT_HOST
-                        ),
+                        source_host=(OPENALEX_CONTENT_HOST),
                         on_response=(
-                            lambda response: (
-                                budget.update_from_headers(
-                                    getattr(
-                                        response,
-                                        "headers",
-                                        None,
-                                    )
+                            lambda response: budget.update_from_headers(
+                                getattr(
+                                    response,
+                                    "headers",
+                                    None,
                                 )
                             )
                         ),
@@ -1306,18 +1077,10 @@ def download_direct_oa_pdfs(
                     tier_errors.append(str(error))
 
                 except PdfDownloadError as error:
-                    tier_errors.append(
-                        "OpenAlex content PDF: "
-                        + str(error)
-                    )
+                    tier_errors.append("OpenAlex content PDF: " + str(error))
 
         # Tier 5: OpenAlex GROBID TEI XML (metered).
-        if (
-            not resolved
-            and not deferred
-            and openalex_enabled
-            and xml_output_path is not None
-        ):
+        if not resolved and not deferred and openalex_enabled and xml_output_path is not None:
             content_xml_url = openalex_content_url(
                 paper,
                 "grobid_xml",
@@ -1325,19 +1088,15 @@ def download_direct_oa_pdfs(
             )
 
             if content_xml_url:
-                attempted_tiers.append(
-                    "openalex_grobid_xml"
-                )
+                attempted_tiers.append("openalex_grobid_xml")
 
                 try:
-                    xml_result = (
-                        download_openalex_grobid_xml(
-                            content_xml_url,
-                            session,
-                            xml_output_path,
-                            xml_config,
-                            budget=budget,
-                        )
+                    xml_result = download_openalex_grobid_xml(
+                        content_xml_url,
+                        session,
+                        xml_output_path,
+                        xml_config,
+                        budget=budget,
                     )
 
                     record_manifest(
@@ -1372,33 +1131,22 @@ def download_direct_oa_pdfs(
                     tier_errors.append(str(error))
 
                 except OpenAlexContentError as error:
-                    tier_errors.append(
-                        "OpenAlex GROBID XML: "
-                        + str(error)
-                    )
+                    tier_errors.append("OpenAlex GROBID XML: " + str(error))
 
         if resolved:
-            time.sleep(
-                download_config[
-                    "request_delay_seconds"
-                ]
-            )
+            time.sleep(download_config["request_delay_seconds"])
             continue
 
         if deferred:
             deferred_budget += 1
 
-        error_message = redact_api_key(
-            " | ".join(tier_errors)
-        )
+        error_message = redact_api_key(" | ".join(tier_errors))
 
         if deferred:
             category = "deferred_openalex_budget"
         else:
             category = classify_pdf_failure(
-                tier_errors[0]
-                if tier_errors
-                else "direct PDF download failed"
+                tier_errors[0] if tier_errors else "direct PDF download failed"
             )
 
         add_failure_category(
@@ -1416,11 +1164,7 @@ def download_direct_oa_pdfs(
         }
 
         for url in urls:
-            failure_record[
-                "attempted_hosts"
-            ].append(
-                urlparse(url).hostname
-            )
+            failure_record["attempted_hosts"].append(urlparse(url).hostname)
 
         failures.append(failure_record)
 
@@ -1433,48 +1177,34 @@ def download_direct_oa_pdfs(
             error_message,
         )
 
-        time.sleep(
-            download_config[
-                "request_delay_seconds"
-            ]
-        )
+        time.sleep(download_config["request_delay_seconds"])
 
     write_jsonl(
         failures,
         failures_path,
     )
 
-    local_valid_pdfs = (
-        count_valid_local_pdfs(
-            papers,
-            output_directory,
-            download_config[
-                "minimum_pdf_bytes"
-            ],
-        )
+    local_valid_pdfs = count_valid_local_pdfs(
+        papers,
+        output_directory,
+        download_config["minimum_pdf_bytes"],
     )
 
     local_valid_xml = 0
 
     if xml_output_directory is not None:
-        local_valid_xml = (
-            count_valid_local_xml(
-                papers,
-                xml_output_directory,
-                minimum_xml_bytes,
-            )
-        )
-
-    local_valid_full_text = (
-        count_valid_local_full_text(
+        local_valid_xml = count_valid_local_xml(
             papers,
-            output_directory,
             xml_output_directory,
-            download_config[
-                "minimum_pdf_bytes"
-            ],
             minimum_xml_bytes,
         )
+
+    local_valid_full_text = count_valid_local_full_text(
+        papers,
+        output_directory,
+        xml_output_directory,
+        download_config["minimum_pdf_bytes"],
+        minimum_xml_bytes,
     )
 
     remaining = max(
@@ -1495,42 +1225,22 @@ def download_direct_oa_pdfs(
     xml_output_directory_value = None
 
     if xml_output_directory is not None:
-        xml_output_directory_value = str(
-            xml_output_directory
-        )
+        xml_output_directory_value = str(xml_output_directory)
 
     report = {
         "status": status,
-        "total_enriched_papers": len(
-            papers
-        ),
+        "total_enriched_papers": len(papers),
         "requested_limit": limit,
-        "papers_attempted_this_run": (
-            attempted
-        ),
-        "new_pdfs_downloaded": (
-            downloaded
-        ),
+        "papers_attempted_this_run": (attempted),
+        "new_pdfs_downloaded": (downloaded),
         "new_publisher_pdfs_downloaded": (
-            downloaded
-            - mdpi_cdn_downloaded
-            - openalex_pdfs_downloaded
+            downloaded - mdpi_cdn_downloaded - openalex_pdfs_downloaded
         ),
-        "new_mdpi_cdn_pdfs_downloaded": (
-            mdpi_cdn_downloaded
-        ),
-        "new_europe_pmc_xml_downloaded": (
-            xml_fallbacks_downloaded
-        ),
-        "new_openalex_pdfs_downloaded": (
-            openalex_pdfs_downloaded
-        ),
-        "new_openalex_grobid_xml_downloaded": (
-            openalex_xml_downloaded
-        ),
-        "deferred_openalex_budget": (
-            deferred_budget
-        ),
+        "new_mdpi_cdn_pdfs_downloaded": (mdpi_cdn_downloaded),
+        "new_europe_pmc_xml_downloaded": (xml_fallbacks_downloaded),
+        "new_openalex_pdfs_downloaded": (openalex_pdfs_downloaded),
+        "new_openalex_grobid_xml_downloaded": (openalex_xml_downloaded),
+        "deferred_openalex_budget": (deferred_budget),
         "openalex_budget": budget.snapshot(),
         "tiers_enabled": {
             "publisher_pdf": True,
@@ -1538,48 +1248,20 @@ def download_direct_oa_pdfs(
             "europe_pmc_xml": fallback_enabled,
             "openalex_content": openalex_enabled,
         },
-        "existing_pdfs_skipped": (
-            skipped_existing
-        ),
-        "existing_xml_skipped": (
-            skipped_existing_xml
-        ),
-        "missing_safe_pdf_url": (
-            missing_urls
-        ),
-        "failures_this_run": len(
-            failures
-        ),
-        "failure_categories": (
-            failure_categories
-        ),
-        "local_valid_pdfs": (
-            local_valid_pdfs
-        ),
-        "local_valid_xml": (
-            local_valid_xml
-        ),
-        "local_valid_europe_pmc_xml": (
-            local_valid_xml
-        ),
-        "local_valid_full_text": (
-            local_valid_full_text
-        ),
-        "remaining_without_local_pdf": (
-            remaining_without_pdf
-        ),
-        "remaining_without_local_full_text": (
-            remaining
-        ),
-        "output_directory": str(
-            output_directory
-        ),
-        "xml_output_directory": (
-            xml_output_directory_value
-        ),
-        "updated_at": datetime.now(
-            UTC
-        ).isoformat(),
+        "existing_pdfs_skipped": (skipped_existing),
+        "existing_xml_skipped": (skipped_existing_xml),
+        "missing_safe_pdf_url": (missing_urls),
+        "failures_this_run": len(failures),
+        "failure_categories": (failure_categories),
+        "local_valid_pdfs": (local_valid_pdfs),
+        "local_valid_xml": (local_valid_xml),
+        "local_valid_europe_pmc_xml": (local_valid_xml),
+        "local_valid_full_text": (local_valid_full_text),
+        "remaining_without_local_pdf": (remaining_without_pdf),
+        "remaining_without_local_full_text": (remaining),
+        "output_directory": str(output_directory),
+        "xml_output_directory": (xml_output_directory_value),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
 
     write_json(

@@ -22,9 +22,7 @@ def parse_arguments() -> argparse.Namespace:
     """Read optional command-line settings."""
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Convert local research PDFs into GROBID TEI XML."
-        )
+        description=("Convert local research PDFs into GROBID TEI XML.")
     )
 
     parser.add_argument(
@@ -45,16 +43,12 @@ def get_grobid_config(
     extraction_config = project_config.get("text_extraction")
 
     if extraction_config is None:
-        raise KeyError(
-            "Missing text_extraction configuration."
-        )
+        raise KeyError("Missing text_extraction configuration.")
 
     grobid_config = extraction_config.get("grobid")
 
     if grobid_config is None:
-        raise KeyError(
-            "Missing text_extraction.grobid configuration."
-        )
+        raise KeyError("Missing text_extraction.grobid configuration.")
 
     return grobid_config
 
@@ -141,21 +135,11 @@ def main() -> None:
     project_config = load_corpus_config()
     grobid_config = get_grobid_config(project_config)
 
-    inventory_path = Path(
-        grobid_config["inventory_path"]
-    )
-    output_directory = Path(
-        grobid_config["output_directory"]
-    )
-    manifest_path = Path(
-        grobid_config["manifest_path"]
-    )
-    failures_path = Path(
-        grobid_config["failures_path"]
-    )
-    report_path = Path(
-        grobid_config["report_path"]
-    )
+    inventory_path = Path(grobid_config["inventory_path"])
+    output_directory = Path(grobid_config["output_directory"])
+    manifest_path = Path(grobid_config["manifest_path"])
+    failures_path = Path(grobid_config["failures_path"])
+    report_path = Path(grobid_config["report_path"])
 
     inventory_records = read_jsonl(inventory_path)
     pdf_records = select_pdf_records(inventory_records)
@@ -165,12 +149,8 @@ def main() -> None:
 
     client = GrobidClient(
         base_url=grobid_config["base_url"],
-        timeout_seconds=int(
-            grobid_config.get("timeout_seconds", 180)
-        ),
-        max_retries=int(
-            grobid_config.get("max_retries", 3)
-        ),
+        timeout_seconds=int(grobid_config.get("timeout_seconds", 180)),
+        max_retries=int(grobid_config.get("max_retries", 3)),
         retry_delay_seconds=float(
             grobid_config.get(
                 "retry_delay_seconds",
@@ -203,9 +183,7 @@ def main() -> None:
             0.25,
         )
     )
-    minimum_tei_bytes = int(
-        grobid_config.get("minimum_tei_bytes", 1000)
-    )
+    minimum_tei_bytes = int(grobid_config.get("minimum_tei_bytes", 1000))
 
     grobid_version = client.version()
 
@@ -235,10 +213,7 @@ def main() -> None:
         if work_id in completed_ids:
             continue
 
-        if (
-            arguments.limit is not None
-            and attempted_this_run >= arguments.limit
-        ):
+        if arguments.limit is not None and attempted_this_run >= arguments.limit:
             break
 
         pdf_path = Path(pdf_path_value)
@@ -256,9 +231,7 @@ def main() -> None:
                 "tei_path": str(tei_path),
                 "status": "recovered_existing",
                 "validation": existing_reason,
-                "completed_at": datetime.now(
-                    timezone.utc
-                ).isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
             }
 
             append_jsonl(manifest_path, manifest_record)
@@ -282,9 +255,7 @@ def main() -> None:
                 "status": "success",
                 "tei_bytes": result["tei_bytes"],
                 "attempts": result["attempts"],
-                "completed_at": datetime.now(
-                    timezone.utc
-                ).isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
             }
 
             append_jsonl(manifest_path, manifest_record)
@@ -306,9 +277,7 @@ def main() -> None:
                 "tei_path": str(tei_path),
                 "status": "failed",
                 "error": str(error),
-                "failed_at": datetime.now(
-                    timezone.utc
-                ).isoformat(),
+                "failed_at": datetime.now(timezone.utc).isoformat(),
             }
 
             failure_map[work_id] = failure_record
@@ -343,9 +312,7 @@ def main() -> None:
 
     report = {
         "status": status,
-        "updated_at": datetime.now(
-            timezone.utc
-        ).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
         "grobid_version": grobid_version,
         "total_pdf_candidates": len(pdf_records),
         "completed_pdf_papers": completed_candidates,

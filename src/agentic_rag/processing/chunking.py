@@ -15,9 +15,7 @@ TOKEN_PATTERN = re.compile(
     re.UNICODE,
 )
 
-SENTENCE_BOUNDARY_PATTERN = re.compile(
-    r"(?<=[.!?])\s+"
-)
+SENTENCE_BOUNDARY_PATTERN = re.compile(r"(?<=[.!?])\s+")
 
 
 def normalize_text(text: str) -> str:
@@ -83,9 +81,7 @@ def split_oversized_text(
         start_position = matches[start_index].start()
         end_position = matches[end_index - 1].end()
 
-        chunk_text = text[
-            start_position:end_position
-        ].strip()
+        chunk_text = text[start_position:end_position].strip()
 
         if chunk_text:
             chunks.append(chunk_text)
@@ -106,20 +102,13 @@ def split_text(
     """Split text at sentence boundaries with overlap."""
 
     if max_tokens <= 0:
-        raise ValueError(
-            "max_tokens must be greater than zero."
-        )
+        raise ValueError("max_tokens must be greater than zero.")
 
     if overlap_tokens < 0:
-        raise ValueError(
-            "overlap_tokens cannot be negative."
-        )
+        raise ValueError("overlap_tokens cannot be negative.")
 
     if overlap_tokens >= max_tokens:
-        raise ValueError(
-            "overlap_tokens must be smaller than "
-            "max_tokens."
-        )
+        raise ValueError("overlap_tokens must be smaller than max_tokens.")
 
     clean_text = normalize_text(text)
 
@@ -129,9 +118,7 @@ def split_text(
     if count_tokens(clean_text) <= max_tokens:
         return [clean_text]
 
-    sentences = SENTENCE_BOUNDARY_PATTERN.split(
-        clean_text
-    )
+    sentences = SENTENCE_BOUNDARY_PATTERN.split(clean_text)
 
     chunks: list[str] = []
     current_sentences: list[str] = []
@@ -146,9 +133,7 @@ def split_text(
 
         if sentence_tokens > max_tokens:
             if current_sentences:
-                current_text = " ".join(
-                    current_sentences
-                )
+                current_text = " ".join(current_sentences)
                 chunks.append(current_text)
                 current_sentences = []
 
@@ -161,12 +146,8 @@ def split_text(
             chunks.extend(oversized_chunks)
             continue
 
-        candidate_sentences = (
-            current_sentences + [clean_sentence]
-        )
-        candidate_text = " ".join(
-            candidate_sentences
-        )
+        candidate_sentences = current_sentences + [clean_sentence]
+        candidate_text = " ".join(candidate_sentences)
 
         if count_tokens(candidate_text) <= max_tokens:
             current_sentences.append(clean_sentence)
@@ -183,14 +164,9 @@ def split_text(
         current_sentences = []
 
         if overlap_text:
-            overlap_candidate = (
-                f"{overlap_text} {clean_sentence}"
-            )
+            overlap_candidate = f"{overlap_text} {clean_sentence}"
 
-            if (
-                count_tokens(overlap_candidate)
-                <= max_tokens
-            ):
+            if count_tokens(overlap_candidate) <= max_tokens:
                 current_sentences.append(overlap_text)
 
         current_sentences.append(clean_sentence)
@@ -210,14 +186,9 @@ def build_chunk_id(
 ) -> str:
     """Create a stable ID from chunk identity and content."""
 
-    identity = (
-        f"{paper_id}|{section_id}|"
-        f"{chunk_index}|{text}"
-    )
+    identity = f"{paper_id}|{section_id}|{chunk_index}|{text}"
 
-    digest = hashlib.sha256(
-        identity.encode("utf-8")
-    ).hexdigest()[:12]
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
 
     return f"{paper_id}-chunk-{digest}"
 
@@ -238,9 +209,7 @@ def create_section_chunks(
 
     chunks: list[DocumentChunk] = []
 
-    for chunk_index, chunk_text in enumerate(
-        chunk_texts
-    ):
+    for chunk_index, chunk_text in enumerate(chunk_texts):
         chunk_id = build_chunk_id(
             paper_id=paper.paper_id,
             section_id=section.section_id,

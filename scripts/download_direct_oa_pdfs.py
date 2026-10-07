@@ -13,8 +13,7 @@ from agentic_rag.ingestion.direct_pdf_downloader import (
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description=(
-            "Download PDFs from original open-access "
-            "locations, with Europe PMC XML fallback."
+            "Download PDFs from original open-access locations, with Europe PMC XML fallback."
         )
     )
 
@@ -22,10 +21,7 @@ def parse_arguments():
         "--limit",
         type=int,
         default=None,
-        help=(
-            "Maximum number of new papers "
-            "to attempt."
-        ),
+        help=("Maximum number of new papers to attempt."),
     )
 
     return parser.parse_args()
@@ -35,9 +31,7 @@ def main():
     arguments = parse_arguments()
     config = load_corpus_config()
 
-    configured_limit = config[
-        "direct_pdf_download"
-    ]["default_limit"]
+    configured_limit = config["direct_pdf_download"]["default_limit"]
 
     effective_limit = arguments.limit
 
@@ -52,10 +46,7 @@ def main():
     print("Maximum papers to attempt:")
     print(effective_limit)
     print()
-    print(
-        "Existing valid PDFs and fallback XML files "
-        "will be skipped automatically."
-    )
+    print("Existing valid PDFs and fallback XML files will be skipped automatically.")
 
     report = download_direct_oa_pdfs(
         config,

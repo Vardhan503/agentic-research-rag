@@ -45,9 +45,7 @@ def test_short_text_stays_in_one_chunk() -> None:
     )
 
     assert len(chunks) == 1
-    assert chunks[0] == (
-        "This is one short scientific sentence."
-    )
+    assert chunks[0] == ("This is one short scientific sentence.")
 
 
 def test_long_section_creates_multiple_chunks() -> None:
@@ -56,10 +54,7 @@ def test_long_section_creates_multiple_chunks() -> None:
     sentences: list[str] = []
 
     for number in range(1, 21):
-        sentence = (
-            f"Sentence {number} explains hybrid "
-            "retrieval and document reranking."
-        )
+        sentence = f"Sentence {number} explains hybrid retrieval and document reranking."
         sentences.append(sentence)
 
     section_text = " ".join(sentences)
@@ -128,9 +123,7 @@ def test_chunking_does_not_mix_sections() -> None:
 def test_abstract_becomes_searchable_chunk() -> None:
     """A paper abstract should become its own chunk."""
 
-    paper = create_test_paper(
-        "This is the methods section."
-    )
+    paper = create_test_paper("This is the methods section.")
 
     chunks = chunk_paper(
         paper=paper,
@@ -167,8 +160,6 @@ def test_chunk_ids_are_deterministic() -> None:
 def test_token_counter_includes_punctuation() -> None:
     """Words and punctuation should be counted."""
 
-    token_count = count_tokens(
-        "Dense retrieval, sparse retrieval."
-    )
+    token_count = count_tokens("Dense retrieval, sparse retrieval.")
 
     assert token_count == 6
