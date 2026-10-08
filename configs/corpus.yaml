@@ -280,8 +280,13 @@ retrieval:
   max_chunks_per_paper: 3
 
 agentic_rag:
-  # Initially, qwen3:14b performs routing, grading, generation,
-  # and self-checking. Separate models can be configured later.
+  # "openai" uses openai_model with OPENAI_API_KEY from .env.
+  # "ollama" uses the local model and host below.
+  provider: "openai"
+  openai_model: "gpt-4.1-mini"
+  openai_timeout_seconds: 60
+
+  # Ollama settings, used when provider is "ollama".
   model: "qwen3:14b"
   host: "http://localhost:11434"
 

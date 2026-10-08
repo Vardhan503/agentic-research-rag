@@ -59,14 +59,12 @@ class AgenticRAGRuntime:
         return self.require_section("web_search")
 
     def get_llm(self) -> Any:
-        """Create the Ollama client only when an LLM node runs."""
+        """Create the configured LLM client only when an LLM node runs."""
 
         if self._llm is None:
-            from agentic_rag.llm.ollama_client import (
-                OllamaStructuredClient,
-            )
+            from agentic_rag.llm.factory import create_llm_client
 
-            self._llm = OllamaStructuredClient.from_config(self.agent_config)
+            self._llm = create_llm_client(self.agent_config)
 
         return self._llm
 

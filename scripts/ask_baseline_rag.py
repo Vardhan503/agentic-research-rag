@@ -7,7 +7,7 @@ from agentic_rag.config import (
     load_corpus_config,
 )
 from agentic_rag.graph.baseline import run_baseline_rag
-from agentic_rag.llm.ollama_client import OllamaStructuredClient
+from agentic_rag.llm.factory import create_llm_client
 from agentic_rag.retrieval.factory import create_hybrid_retriever
 
 
@@ -91,7 +91,7 @@ def main() -> None:
     agent_config = load_agentic_rag_config()
 
     retriever = create_hybrid_retriever(retrieval_config)
-    llm = OllamaStructuredClient.from_config(agent_config)
+    llm = create_llm_client(agent_config)
 
     try:
         result = run_baseline_rag(

@@ -10,7 +10,7 @@ from agentic_rag.graph.query_rewriting import (
 )
 from agentic_rag.graph.web_fallback import run_web_fallback
 from agentic_rag.graph.web_search import TavilyWebSearch
-from agentic_rag.llm.ollama_client import OllamaStructuredClient
+from agentic_rag.llm.factory import create_llm_client
 from agentic_rag.retrieval.factory import create_hybrid_retriever
 
 
@@ -49,7 +49,7 @@ def main() -> None:
     agent_config = load_agentic_rag_config()
 
     retriever = create_hybrid_retriever(retrieval_config)
-    llm = OllamaStructuredClient.from_config(agent_config)
+    llm = create_llm_client(agent_config)
     web_search = TavilyWebSearch.from_config(web_config)
 
     try:
