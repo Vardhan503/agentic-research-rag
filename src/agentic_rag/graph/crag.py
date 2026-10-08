@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -56,6 +57,15 @@ Rules:
 - Do not answer the question.
 - For incomplete evidence, state exactly what information is missing.
 - For sufficient evidence, missing_information must be empty.
+
+Time-bound questions:
+- Use the supplied current date to resolve phrases such as "last seven days",
+  "this week", "recent", "latest", or "this year" into a concrete date window.
+- Evidence counts toward a time-bound question only when its Year or Published
+  date shows it falls inside that window. Never assume a source is recent.
+- If no source's date confirms it is inside the window, the status is
+  incomplete, and missing_information must name the date window, for example
+  "Agentic RAG research published between 2026-10-01 and 2026-10-08".
 """.strip()
 
 
@@ -215,6 +225,7 @@ def assess_combined_context(
     documents: list[EvidenceDocument],
     llm: OllamaStructuredClient,
     maximum_characters_per_document: int = 2000,
+    today: date | None = None,
 ) -> ContextAssessment:
     """Decide whether all selected chunks can answer the question."""
 
@@ -230,7 +241,16 @@ def assess_combined_context(
         maximum_characters_per_document=(maximum_characters_per_document),
     )
 
-    prompt = "Question:\n" + question.strip() + "\n\nSelected scientific evidence:\n" + context
+    current_date = today or date.today()
+
+    prompt = (
+        "Current date: "
+        + current_date.isoformat()
+        + "\n\nQuestion:\n"
+        + question.strip()
+        + "\n\nSelected scientific evidence:\n"
+        + context
+    )
 
     return llm.invoke(
         system_prompt=CONTEXT_GRADER_SYSTEM_PROMPT,

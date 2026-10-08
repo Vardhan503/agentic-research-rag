@@ -17,6 +17,7 @@ class EvidenceDocument(BaseModel):
     section_heading: str = ""
     doi: str | None = None
     publication_year: int | None = None
+    published_date: str | None = None
     url: str | None = None
     source: Literal["corpus", "web"] = "corpus"
 
@@ -77,6 +78,9 @@ class EvidenceDocument(BaseModel):
 
         if self.publication_year is not None:
             lines.append("Year: " + str(self.publication_year))
+
+        if self.published_date:
+            lines.append("Published: " + self.published_date)
 
         if self.doi:
             lines.append("DOI: " + self.doi)

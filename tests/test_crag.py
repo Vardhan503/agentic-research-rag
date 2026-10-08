@@ -1,15 +1,17 @@
+from datetime import date
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from agentic_rag.graph.crag import (
+    assess_combined_context,
     grade_documents,
     run_crag_assessment,
     validate_grade_batch,
 )
 from agentic_rag.graph.documents import EvidenceDocument
-from agentic_rag.graph.schemas import DocumentGradeBatch
+from agentic_rag.graph.schemas import ContextAssessment, DocumentGradeBatch
 from agentic_rag.llm.ollama_client import OllamaStructuredClient
 
 
@@ -45,6 +47,33 @@ def create_llm(responses: list[str]):
         client=client,
     )
     return llm, client
+
+
+def test_context_grader_receives_current_date_and_publication_year() -> None:
+    prompts: list[str] = []
+
+    class RecordingLLM:
+        def invoke(self, **kwargs: Any) -> ContextAssessment:
+            prompts.append(kwargs["user_prompt"])
+            return ContextAssessment(
+                status="incomplete",
+                reason="No source is dated inside the requested window.",
+                missing_information=("Agentic RAG research published between 2026-10-01 and 2026-10-08"),
+            )
+
+    document = create_document("chunk-1", "Agentic RAG for time series.")
+    document.publication_year = 2024
+
+    assessment = assess_combined_context(
+        question="What agentic RAG research was published in the last seven days?",
+        documents=[document],
+        llm=RecordingLLM(),  # type: ignore[arg-type]
+        today=date(2026, 10, 8),
+    )
+
+    assert assessment.status == "incomplete"
+    assert prompts[0].startswith("Current date: 2026-10-08")
+    assert "Year: 2024" in prompts[0]
 
 
 def test_documents_are_graded_in_one_request() -> None:

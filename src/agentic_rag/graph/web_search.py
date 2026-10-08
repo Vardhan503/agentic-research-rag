@@ -68,6 +68,7 @@ def convert_tavily_results(
             content = content[:maximum_content_characters].rstrip() + "..."
 
         title = str(raw_result.get("title") or "Untitled web source").strip()
+        published_date = str(raw_result.get("published_date") or "").strip()
         source_id = create_web_source_id(url)
 
         document = EvidenceDocument(
@@ -76,6 +77,7 @@ def convert_tavily_results(
             title=title,
             text=content,
             section_heading="Web search result",
+            published_date=published_date or None,
             url=url,
             source="web",
             retrieval_sources=["tavily"],

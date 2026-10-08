@@ -99,6 +99,29 @@ def test_tavily_results_become_stable_web_evidence() -> None:
     assert documents[0].url == "https://example.org/crag"
 
 
+def test_tavily_published_date_reaches_the_grader_prompt() -> None:
+    documents = convert_tavily_results(
+        [
+            {
+                "title": "New agentic RAG benchmark",
+                "url": "https://example.org/agentic-rag",
+                "content": "A benchmark for agentic retrieval.",
+                "published_date": "2026-10-06",
+            },
+            {
+                "title": "Undated page",
+                "url": "https://example.org/undated",
+                "content": "No date is available.",
+            },
+        ]
+    )
+
+    assert documents[0].published_date == "2026-10-06"
+    assert "Published: 2026-10-06" in documents[0].prompt_text()
+    assert documents[1].published_date is None
+    assert "Published:" not in documents[1].prompt_text()
+
+
 def test_missing_api_key_is_nonfatal() -> None:
     web_search = TavilyWebSearch(api_key=None, client=None)
     web_search.api_key = None
