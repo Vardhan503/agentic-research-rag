@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -282,8 +283,22 @@ def test_build_and_search_small_index(
             query="dense retrieval",
             use_reranker=False,
         )
+
+        # LangGraph runs nodes in worker threads while the retriever is
+        # cached, so searches must work from a thread that did not open it.
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            threaded_results = list(
+                executor.map(
+                    lambda query: retriever.search(
+                        query=query,
+                        use_reranker=False,
+                    ),
+                    ["dense retrieval", "sparse lexical terms"],
+                )
+            )
     finally:
         retriever.close()
 
     assert results
     assert results[0].chunk.chunk_id == "dense-chunk"
+    assert all(threaded_results)

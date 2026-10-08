@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -210,10 +211,14 @@ class HybridRetriever:
 
         self.dense_index = faiss.read_index(str(faiss_index_path))
 
+        # The retriever is cached and shared by LangGraph worker threads, so
+        # the read-only connection may be used outside the thread that opened it.
         self.connection = sqlite3.connect(
             f"file:{sqlite_index_path}?mode=ro",
             uri=True,
+            check_same_thread=False,
         )
+        self._connection_lock = threading.Lock()
 
         self.query_prefix = query_prefix
         self.dense_top_k = dense_top_k
@@ -263,14 +268,15 @@ class HybridRetriever:
     ) -> DocumentChunk | None:
         """Load one complete chunk from SQLite."""
 
-        row = self.connection.execute(
-            """
-            SELECT chunk_json
-            FROM chunks
-            WHERE vector_id = ?
-            """,
-            (vector_id,),
-        ).fetchone()
+        with self._connection_lock:
+            row = self.connection.execute(
+                """
+                SELECT chunk_json
+                FROM chunks
+                WHERE vector_id = ?
+                """,
+                (vector_id,),
+            ).fetchone()
 
         if row is None:
             return None
@@ -342,23 +348,24 @@ class HybridRetriever:
         if not fts_query:
             return []
 
-        rows = self.connection.execute(
-            """
-            SELECT
-                chunks.chunk_json,
-                bm25(chunks_fts) AS bm25_score
-            FROM chunks_fts
-            JOIN chunks
-                ON chunks.vector_id = chunks_fts.rowid
-            WHERE chunks_fts MATCH ?
-            ORDER BY bm25_score
-            LIMIT ?
-            """,
-            (
-                fts_query,
-                self.sparse_top_k,
-            ),
-        ).fetchall()
+        with self._connection_lock:
+            rows = self.connection.execute(
+                """
+                SELECT
+                    chunks.chunk_json,
+                    bm25(chunks_fts) AS bm25_score
+                FROM chunks_fts
+                JOIN chunks
+                    ON chunks.vector_id = chunks_fts.rowid
+                WHERE chunks_fts MATCH ?
+                ORDER BY bm25_score
+                LIMIT ?
+                """,
+                (
+                    fts_query,
+                    self.sparse_top_k,
+                ),
+            ).fetchall()
 
         results: list[RetrievalCandidate] = []
 
@@ -455,4 +462,5 @@ class HybridRetriever:
     def close(self) -> None:
         """Close the SQLite connection."""
 
-        self.connection.close()
+        with self._connection_lock:
+            self.connection.close()
