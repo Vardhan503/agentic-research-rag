@@ -26,6 +26,7 @@ from agentic_rag.graph.self_rag import (
 )
 from agentic_rag.graph.state import (
     AgenticRAGState,
+    create_initial_state,
     documents_from_state,
     documents_to_state,
 )
@@ -70,15 +71,24 @@ class AgenticRAGNodes:
         self,
         state: AgenticRAGState,
     ) -> dict[str, Any]:
-        """Decide whether the question needs research retrieval."""
+        """Decide whether the question needs research retrieval.
+
+        This is the entry node, so it also builds the full per-question state.
+        LangGraph Studio starts runs with only {"question": ...} and reuses a
+        thread's state for follow-up questions, so fields such as
+        retrieval_query would otherwise be missing or left from the last run.
+        """
+
+        initial_state = create_initial_state(state["question"])
 
         decision = self.runtime.get_llm().invoke(
             system_prompt=RETRIEVAL_ROUTER_SYSTEM_PROMPT,
-            user_prompt="User question:\n" + state["question"],
+            user_prompt="User question:\n" + initial_state["question"],
             response_model=RetrievalDecision,
         )
 
         return {
+            **initial_state,
             "retrieval_needed": decision.retrieve,
             "router_reason": decision.reason,
         }

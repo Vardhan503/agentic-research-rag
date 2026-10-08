@@ -187,6 +187,52 @@ def test_graph_accepts_a_grounded_useful_answer(
     assert len(result["citations"]) == 1
 
 
+def test_graph_accepts_question_only_input_like_langgraph_studio(
+    monkeypatch: Any,
+) -> None:
+    document = create_document()
+    runtime = FakeRuntime(
+        FakeLLM(
+            [
+                RetrievalDecision(
+                    retrieve=True,
+                    reason="Research evidence is required.",
+                )
+            ]
+        )
+    )
+    retrieval_queries: list[str] = []
+
+    def fake_retrieve(**kwargs: Any) -> list[EvidenceDocument]:
+        retrieval_queries.append(kwargs["question"])
+        return [document]
+
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.retrieve_evidence",
+        fake_retrieve,
+    )
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.run_crag_assessment",
+        lambda **_kwargs: correct_assessment(document),
+    )
+    patch_successful_self_rag(monkeypatch)
+
+    graph = build_agentic_rag_graph(runtime)
+    # Studio supplies only the question, plus leftovers from an earlier run
+    # on the same thread.
+    result = graph.invoke(
+        {
+            "question": "How does CRAG recover?",
+            "retrieval_query": "a stale query from the previous question",
+            "rewrite_count": 2,
+        }
+    )
+
+    assert retrieval_queries == ["How does CRAG recover?"]
+    assert result["final_status"] == "accepted"
+    assert result["rewrite_count"] == 0
+
+
 def test_incomplete_context_rewrites_and_retrieves_again(
     monkeypatch: Any,
 ) -> None:
