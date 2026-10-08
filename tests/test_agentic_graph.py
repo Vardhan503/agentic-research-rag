@@ -1,6 +1,8 @@
 from datetime import date
 from typing import Any
 
+import pytest
+
 from agentic_rag.graph.crag import CRAGAssessment
 from agentic_rag.graph.documents import EvidenceDocument
 from agentic_rag.graph.query_rewriting import RewrittenQuery
@@ -12,7 +14,7 @@ from agentic_rag.graph.schemas import (
 )
 from agentic_rag.graph.state import create_initial_state
 from agentic_rag.graph.web_search import WebSearchResult
-from agentic_rag.graph.workflow import build_agentic_rag_graph
+from agentic_rag.graph.workflow import build_agentic_rag_graph, mentions_time_window
 
 
 class FakeLLM:
@@ -220,6 +222,8 @@ def test_graph_accepts_question_only_input_like_langgraph_studio(
     )
     patch_successful_self_rag(monkeypatch)
 
+    runtime.llm.responses[0].recent_days = 30
+
     graph = build_agentic_rag_graph(runtime)
     # Studio supplies only the question, plus leftovers from an earlier run
     # on the same thread.
@@ -234,6 +238,8 @@ def test_graph_accepts_question_only_input_like_langgraph_studio(
     assert retrieval_queries == ["How does CRAG recover?"]
     assert result["final_status"] == "accepted"
     assert result["rewrite_count"] == 0
+    # The router guessed a window, but the question has no time wording.
+    assert result["recent_days"] is None
 
 
 def test_incomplete_context_rewrites_and_retrieves_again(
@@ -434,6 +440,20 @@ def test_incorrect_context_uses_web_fallback(
     assert len(web_search.queries) == 1
     assert web_search.date_filters == [{}]
     assert assessment_calls == 2
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        ("What agentic RAG research came out in the last seven days?", True),
+        ("What is the latest corrective RAG benchmark?", True),
+        ("Which RAG papers appeared in the past 3 months?", True),
+        ("Compare how CRAG, Self-RAG, and adaptive RAG decide when to retrieve.", False),
+        ("What context window does Llama 4 Scout support?", False),
+    ],
+)
+def test_mentions_time_window(question: str, expected: bool) -> None:
+    assert mentions_time_window(question) is expected
 
 
 def test_time_bound_question_restricts_web_search_dates(

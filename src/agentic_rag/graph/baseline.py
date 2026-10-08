@@ -134,6 +134,11 @@ def repair_missing_citations(
     return generated.model_copy(update={"answer": repaired_answer})
 
 
+# Cited multi-paragraph answers run past the shared 500-token default, which
+# truncates the JSON mid-string.
+ANSWER_OUTPUT_TOKENS = 1500
+
+
 def invoke_grounded_generation(
     prompt: str,
     documents: list[EvidenceDocument],
@@ -149,6 +154,7 @@ def invoke_grounded_generation(
         system_prompt=GENERATOR_SYSTEM_PROMPT,
         user_prompt=prompt,
         response_model=build_answer_schema(documents),
+        num_predict=ANSWER_OUTPUT_TOKENS,
     )
 
     generated = repair_missing_citations(generated)

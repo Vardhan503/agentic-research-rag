@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 
 from agentic_rag.graph.baseline import (
+    ANSWER_OUTPUT_TOKENS,
     build_citations,
     build_generation_prompt,
     run_baseline_rag,
@@ -34,8 +35,10 @@ class FakeRetriever:
 class FakeOllamaClient:
     def __init__(self, content: str) -> None:
         self.content = content
+        self.calls: list[dict[str, Any]] = []
 
-    def chat(self, **_kwargs: Any):
+    def chat(self, **kwargs: Any):
+        self.calls.append(kwargs)
         return SimpleNamespace(message=SimpleNamespace(content=self.content))
 
 
@@ -144,6 +147,8 @@ def test_baseline_rag_retrieves_and_generates() -> None:
     assert result.source_ids == [source_id]
     assert len(result.citations) == 1
     assert retriever.received_query == ("How does corrective RAG recover?")
+    # Long cited answers need more room than the shared default budget.
+    assert fake_ollama.calls[0]["options"]["num_predict"] == ANSWER_OUTPUT_TOKENS
 
 
 def test_baseline_rag_handles_empty_retrieval() -> None:

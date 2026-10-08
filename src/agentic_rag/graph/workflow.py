@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 from typing import Any, Literal
 
@@ -52,12 +53,26 @@ Set retrieve to false only for:
 
 When uncertain, set retrieve to true. Do not answer the question.
 
-Set recent_days only when the question restricts the answer to a recent time
-window, as the number of days back from today: "last seven days" or "this
-week" is 7, "last month" is 30, "this year" or "past year" is 365. Use 30 for
-vague words such as "latest", "recent", or "new" when they ask about recently
-published work. Otherwise set recent_days to null.
+recent_days must be null unless the question itself contains a time phrase
+asking for recently published work. Never infer recency from the topic, from
+product names, or from words like "compare", "how", or "which".
+When such a phrase is present, give the number of days back from today:
+"last seven days" or "this week" is 7, "last month" is 30, "this year" or
+"past year" is 365, and "latest" or "recent" without a period is 30.
 """.strip()
+
+
+TIME_WINDOW_PATTERN = re.compile(
+    r"\b(last|past|this|recent|recently|latest|newest|today|yesterday|current|currently)\b"
+    r"|\b\d+\s*(day|days|week|weeks|month|months|year|years)\b",
+    re.IGNORECASE,
+)
+
+
+def mentions_time_window(question: str) -> bool:
+    """Return True when the question has wording that can limit dates."""
+
+    return TIME_WINDOW_PATTERN.search(question) is not None
 
 
 DIRECT_ANSWER_SYSTEM_PROMPT = """
@@ -98,7 +113,7 @@ class AgenticRAGNodes:
             **initial_state,
             "retrieval_needed": decision.retrieve,
             "router_reason": decision.reason,
-            "recent_days": decision.recent_days,
+            "recent_days": (decision.recent_days if mentions_time_window(initial_state["question"]) else None),
         }
 
     def direct_answer(
