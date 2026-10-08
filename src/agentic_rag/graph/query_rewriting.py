@@ -182,6 +182,7 @@ def run_corrective_retrieval(
     maximum_grade_characters_per_document: int = 1600,
     maximum_context_characters_per_document: int = 2000,
     maximum_rewrite_characters_per_document: int = 1200,
+    maximum_accumulated_documents: int = 12,
 ) -> CorrectiveRetrievalResult:
     """Retrieve, grade, rewrite incomplete queries, and retrieve again."""
 
@@ -234,9 +235,10 @@ def run_corrective_retrieval(
             top_k=top_k,
         )
 
-        combined_documents = merge_evidence(
+        combined_documents = select_corrective_evidence(
             existing=assessment.selected_documents,
             incoming=new_documents,
+            maximum_documents=maximum_accumulated_documents,
         )
 
         assessment = run_crag_assessment(
