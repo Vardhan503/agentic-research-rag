@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any
 
 from agentic_rag.graph.crag import CRAGAssessment
@@ -33,9 +34,11 @@ class FakeWebSearch:
     def __init__(self, result: WebSearchResult) -> None:
         self.result = result
         self.queries: list[str] = []
+        self.date_filters: list[dict[str, str]] = []
 
-    def search(self, query: str) -> WebSearchResult:
+    def search(self, query: str, **date_filter: str) -> WebSearchResult:
         self.queries.append(query)
+        self.date_filters.append(date_filter)
         return self.result
 
 
@@ -293,6 +296,70 @@ def test_incomplete_context_rewrites_and_retrieves_again(
     assert assessment_calls == 2
 
 
+def test_ambiguous_evidence_is_answered_after_corrections_are_exhausted(
+    monkeypatch: Any,
+) -> None:
+    document = create_document()
+    web_search = FakeWebSearch(
+        WebSearchResult(
+            status="complete",
+            query="CRAG recovery",
+            documents=[create_document(source_id="web-source-1", source="web")],
+        )
+    )
+    runtime = FakeRuntime(
+        FakeLLM(
+            [
+                RetrievalDecision(
+                    retrieve=True,
+                    reason="Research evidence is required.",
+                )
+            ]
+        ),
+        web_search=web_search,
+    )
+    assessment_calls = 0
+
+    def fake_assessment(**_kwargs: Any) -> CRAGAssessment:
+        nonlocal assessment_calls
+        assessment_calls += 1
+
+        return CRAGAssessment(
+            route="ambiguous",
+            graded_documents=[document],
+            selected_documents=[document],
+            context_status="incomplete",
+            context_reason="Part of the recovery step is missing.",
+            missing_information="How the query is corrected.",
+        )
+
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.retrieve_evidence",
+        lambda **_kwargs: [document],
+    )
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.run_crag_assessment",
+        fake_assessment,
+    )
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.rewrite_query",
+        lambda **_kwargs: RewrittenQuery(
+            rewritten_query="CRAG query rewriting recovery",
+            reason="Search directly for the missing recovery step.",
+        ),
+    )
+    patch_successful_self_rag(monkeypatch)
+
+    graph = build_agentic_rag_graph(runtime)
+    result = graph.invoke(create_initial_state("How does CRAG recover?"))
+
+    assert result["rewrite_count"] == 2
+    assert result["web_search_used"] is True
+    assert assessment_calls == 4
+    assert result["final_status"] == "accepted"
+    assert result["source_ids"] == ["source-1"]
+
+
 def test_incorrect_context_uses_web_fallback(
     monkeypatch: Any,
 ) -> None:
@@ -365,4 +432,69 @@ def test_incorrect_context_uses_web_fallback(
     assert result["web_search_used"] is True
     assert result["web_search_status"] == "complete"
     assert len(web_search.queries) == 1
+    assert web_search.date_filters == [{}]
     assert assessment_calls == 2
+
+
+def test_time_bound_question_restricts_web_search_dates(
+    monkeypatch: Any,
+) -> None:
+    web_document = create_document(source_id="web-source-1", source="web")
+    web_search = FakeWebSearch(
+        WebSearchResult(
+            status="complete",
+            query="agentic RAG",
+            documents=[web_document],
+        )
+    )
+    runtime = FakeRuntime(
+        FakeLLM(
+            [
+                RetrievalDecision(
+                    retrieve=True,
+                    reason="Recent research is requested.",
+                    recent_days=7,
+                )
+            ]
+        ),
+        web_search=web_search,
+    )
+
+    def fake_assessment(
+        documents: list[EvidenceDocument],
+        **_kwargs: Any,
+    ) -> CRAGAssessment:
+        if not web_search.queries:
+            return CRAGAssessment(
+                route="incorrect",
+                graded_documents=documents,
+                selected_documents=[],
+                context_status="irrelevant",
+                context_reason="No source is from the last seven days.",
+                missing_information="Agentic RAG research from the last seven days.",
+            )
+
+        return correct_assessment(
+            web_document.model_copy(update={"source_id": "source-1", "grade": "correct"})
+        )
+
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.retrieve_evidence",
+        lambda **_kwargs: [create_document()],
+    )
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.run_crag_assessment",
+        fake_assessment,
+    )
+    monkeypatch.setattr(
+        "agentic_rag.graph.workflow.date",
+        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 10, 8))}),
+    )
+    patch_successful_self_rag(monkeypatch)
+
+    graph = build_agentic_rag_graph(runtime)
+    result = graph.invoke({"question": "What agentic RAG research came out this week?"})
+
+    assert result["recent_days"] == 7
+    assert result["final_status"] == "accepted"
+    assert web_search.date_filters == [{"start_date": "2026-10-01", "end_date": "2026-10-08"}]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
@@ -50,6 +51,12 @@ Set retrieve to false only for:
 - Requests that only transform text already supplied by the user.
 
 When uncertain, set retrieve to true. Do not answer the question.
+
+Set recent_days only when the question restricts the answer to a recent time
+window, as the number of days back from today: "last seven days" or "this
+week" is 7, "last month" is 30, "this year" or "past year" is 365. Use 30 for
+vague words such as "latest", "recent", or "new" when they ask about recently
+published work. Otherwise set recent_days to null.
 """.strip()
 
 
@@ -91,6 +98,7 @@ class AgenticRAGNodes:
             **initial_state,
             "retrieval_needed": decision.retrieve,
             "router_reason": decision.reason,
+            "recent_days": decision.recent_days,
         }
 
     def direct_answer(
@@ -226,7 +234,19 @@ class AgenticRAGNodes:
 
         web_config = self.runtime.web_config
         web_query = self._build_web_query(state)
-        search_result = self.runtime.get_web_search().search(web_query)
+        web_search = self.runtime.get_web_search()
+        recent_days = state.get("recent_days")
+
+        if recent_days:
+            end_date = date.today()
+            start_date = end_date - timedelta(days=int(recent_days))
+            search_result = web_search.search(
+                web_query,
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat(),
+            )
+        else:
+            search_result = web_search.search(web_query)
 
         update: dict[str, Any] = {
             "web_search_used": True,
@@ -425,6 +445,11 @@ class AgenticRAGNodes:
 
         if self._web_search_available(state):
             return "web_search"
+
+        # As in CRAG, ambiguous evidence is still used once correction is
+        # exhausted; the hallucination check and critic guard the answer.
+        if route == "ambiguous" and state.get("documents"):
+            return "generate_answer"
 
         return "fallback_answer"
 

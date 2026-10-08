@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 class RetrievalDecision(BaseModel):
     retrieve: bool
     reason: str = Field(min_length=3, max_length=400)
+    recent_days: int | None = Field(default=None, ge=1, le=3650)
 
 
 class DirectAnswer(BaseModel):

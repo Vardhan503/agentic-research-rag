@@ -18,9 +18,11 @@ class FakeTavilyClient:
     def __init__(self, results: list[dict[str, Any]]) -> None:
         self.results = results
         self.queries: list[str] = []
+        self.calls: list[dict[str, Any]] = []
 
     def search(self, **kwargs: Any) -> dict[str, Any]:
         self.queries.append(str(kwargs["query"]))
+        self.calls.append(kwargs)
         return {"results": self.results}
 
 
@@ -120,6 +122,40 @@ def test_tavily_published_date_reaches_the_grader_prompt() -> None:
     assert "Published: 2026-10-06" in documents[0].prompt_text()
     assert documents[1].published_date is None
     assert "Published:" not in documents[1].prompt_text()
+
+
+def test_date_window_is_sent_to_tavily_and_labelled() -> None:
+    fake_tavily = FakeTavilyClient(
+        [
+            {
+                "title": "Agentic RAG benchmark",
+                "url": "https://example.org/benchmark",
+                "content": "A new agentic retrieval benchmark.",
+            }
+        ]
+    )
+    web_search = TavilyWebSearch(client=fake_tavily)
+
+    result = web_search.search(
+        "agentic RAG " * 60,
+        start_date="2026-10-01",
+        end_date="2026-10-08",
+    )
+
+    assert fake_tavily.calls[0]["start_date"] == "2026-10-01"
+    assert fake_tavily.calls[0]["end_date"] == "2026-10-08"
+    assert len(fake_tavily.calls[0]["query"]) <= 400
+    assert "2026-10-01 to 2026-10-08" in result.documents[0].section_heading
+
+
+def test_web_search_without_dates_sends_no_date_filter() -> None:
+    fake_tavily = FakeTavilyClient([])
+    web_search = TavilyWebSearch(client=fake_tavily)
+
+    web_search.search("corrective RAG")
+
+    assert "start_date" not in fake_tavily.calls[0]
+    assert "end_date" not in fake_tavily.calls[0]
 
 
 def test_missing_api_key_is_nonfatal() -> None:

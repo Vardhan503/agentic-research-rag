@@ -61,8 +61,9 @@ Rules:
 Time-bound questions:
 - Use the supplied current date to resolve phrases such as "last seven days",
   "this week", "recent", "latest", or "this year" into a concrete date window.
-- Evidence counts toward a time-bound question only when its Year or Published
-  date shows it falls inside that window. Never assume a source is recent.
+- Evidence counts toward a time-bound question only when its Year, its
+  Published date, or a Section saying it was filtered to pages published in a
+  date range shows it falls inside that window. Never assume a source is recent.
 - If no source's date confirms it is inside the window, the status is
   incomplete, and missing_information must name the date window, for example
   "Agentic RAG research published between 2026-10-01 and 2026-10-08".

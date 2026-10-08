@@ -12,6 +12,7 @@ class AgenticRAGState(TypedDict, total=False):
 
     retrieval_needed: bool
     router_reason: str
+    recent_days: int | None
     retrieval_query: str
 
     documents: list[dict[str, Any]]
@@ -58,6 +59,7 @@ def create_initial_state(question: str) -> AgenticRAGState:
         question=clean_question,
         retrieval_needed=True,
         router_reason="",
+        recent_days=None,
         retrieval_query=clean_question,
         documents=[],
         graded_documents=[],

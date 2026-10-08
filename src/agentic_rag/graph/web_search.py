@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 
 from agentic_rag.graph.documents import EvidenceDocument
 
+# Tavily rejects queries longer than 400 characters.
+MAXIMUM_QUERY_CHARACTERS = 400
 
 class WebSearchResult(BaseModel):
     """Normalized result of one external web search."""
@@ -145,8 +147,17 @@ class TavilyWebSearch:
         self.client = TavilyClient(api_key=self.api_key)
         return self.client
 
-    def search(self, query: str) -> WebSearchResult:
-        """Search the web and return normalized citation-ready evidence."""
+    def search(
+        self,
+        query: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> WebSearchResult:
+        """Search the web and return normalized citation-ready evidence.
+
+        start_date and end_date (YYYY-MM-DD) restrict Tavily to pages
+        published inside that window.
+        """
 
         clean_query = query.strip()
 
@@ -162,14 +173,23 @@ class TavilyWebSearch:
                 error=("TAVILY_API_KEY is not configured, so web fallback was skipped."),
             )
 
+        date_filter: dict[str, str] = {}
+
+        if start_date:
+            date_filter["start_date"] = start_date
+
+        if end_date:
+            date_filter["end_date"] = end_date
+
         try:
             response = client.search(
-                query=clean_query,
+                query=clean_query[:MAXIMUM_QUERY_CHARACTERS],
                 search_depth=self.search_depth,
                 topic=self.topic,
                 max_results=self.max_results,
                 include_answer=False,
                 include_raw_content=False,
+                **date_filter,
             )
         except Exception as error:
             return WebSearchResult(
@@ -183,6 +203,12 @@ class TavilyWebSearch:
             raw_results=raw_results,
             maximum_content_characters=(self.maximum_content_characters),
         )
+
+        if start_date or end_date:
+            window = (start_date or "any date") + " to " + (end_date or "today")
+
+            for document in documents:
+                document.section_heading = "Web search result filtered to pages published " + window
 
         if not documents:
             return WebSearchResult(
