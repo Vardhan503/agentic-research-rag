@@ -8,7 +8,8 @@ from agentic_rag.evaluation.models import EvaluationRecord, EvaluationReport
 from agentic_rag.evaluation.ragas_evaluator import RagasEvaluator
 from agentic_rag.evaluation.runner import (
     build_evaluation_report,
-    record_needs_ragas,
+    merge_ragas_scores,
+    missing_ragas_metrics,
     write_report,
 )
 
@@ -57,7 +58,8 @@ def score_saved_records(
     newly_scored = 0
 
     for record in records:
-        if not record_needs_ragas(record):
+        metric_names = missing_ragas_metrics(record, evaluator.metric_names)
+        if not metric_names:
             continue
         if pipeline is not None and record.output.pipeline != pipeline:
             continue
@@ -69,8 +71,13 @@ def score_saved_records(
             + record.output.pipeline
             + " | "
             + record.example.question_id
+            + " | "
+            + ", ".join(metric_names)
         )
-        record.ragas = asyncio.run(evaluator.evaluate(record.example, record.output))
+        fresh_scores = asyncio.run(
+            evaluator.evaluate(record.example, record.output, metric_names=metric_names)
+        )
+        record.ragas = merge_ragas_scores(record.ragas, fresh_scores)
         newly_scored += 1
         write_records(records_path, records)
 

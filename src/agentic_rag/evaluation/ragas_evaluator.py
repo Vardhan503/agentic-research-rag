@@ -108,6 +108,26 @@ def build_judge_client(config: dict[str, Any]) -> tuple[Any, str]:
     raise ValueError("Unsupported RAGAS judge provider: " + provider)
 
 
+# RAGAS defaults the judge to 1024 output tokens. Faithfulness lists every
+# claim in the answer and then a verdict per claim, so long cited answers
+# overflow that and the metric is dropped with a max_tokens error.
+DEFAULT_JUDGE_MAX_TOKENS = 4096
+
+
+def judge_model_args(config: dict[str, Any]) -> dict[str, Any]:
+    """Return the generation settings passed to the RAGAS judge model."""
+
+    max_tokens = int(config.get("judge_max_tokens", DEFAULT_JUDGE_MAX_TOKENS))
+
+    if max_tokens <= 0:
+        raise ValueError("judge_max_tokens must be positive.")
+
+    return {
+        "max_tokens": max_tokens,
+        "temperature": float(config.get("judge_temperature", 0.0)),
+    }
+
+
 class RagasEvaluator:
     """Run selected RAGAS metrics with an OpenAI or local Ollama judge."""
 
@@ -148,6 +168,7 @@ class RagasEvaluator:
             judge_model,
             provider="openai",
             client=client,
+            **judge_model_args(self.config),
         )
         embeddings = build_sentence_transformer_embedding(
             str(
@@ -185,8 +206,13 @@ class RagasEvaluator:
         self,
         example: EvaluationExample,
         output: PipelineOutput,
+        metric_names: list[str] | None = None,
     ) -> RagasScores:
-        """Evaluate one answer while isolating failures to individual metrics."""
+        """Evaluate one answer while isolating failures to individual metrics.
+
+        metric_names restricts the run to a subset, used when rescoring only
+        the metrics a previous judgement lost to errors.
+        """
 
         scores = RagasScores()
         if output.error or not output.answer.strip():
@@ -196,7 +222,7 @@ class RagasEvaluator:
         contexts = self._limited_contexts(output)
         metrics = self._get_metrics()
 
-        for metric_name in self.metric_names:
+        for metric_name in metric_names if metric_names is not None else self.metric_names:
             metric = metrics.get(metric_name)
             if metric is None:
                 scores.errors[metric_name] = "Unknown RAGAS metric."

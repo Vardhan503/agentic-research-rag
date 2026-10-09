@@ -25,6 +25,11 @@ evaluation:
     host: "http://localhost:11434"
     api_key: "ollama"
     timeout_seconds: 300
+
+    # Output budget for each judge call. RAGAS's default of 1024 truncates
+    # faithfulness on long cited answers and the metric is then skipped.
+    judge_max_tokens: 4096
+    judge_temperature: 0.0
     embedding_model: "BAAI/bge-small-en-v1.5"
     maximum_contexts: 5
     maximum_context_characters: 2000

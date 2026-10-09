@@ -5,8 +5,10 @@ from typing import Any
 import pytest
 
 from agentic_rag.graph.crag import (
+    UNGRADED_REASON,
     assess_combined_context,
     grade_documents,
+    resolve_source_id,
     run_crag_assessment,
     validate_grade_batch,
 )
@@ -110,7 +112,7 @@ def test_documents_are_graded_in_one_request() -> None:
     assert graded[1].grade == "incorrect"
 
 
-def test_missing_source_grade_is_rejected() -> None:
+def test_ungraded_source_is_kept_as_ambiguous() -> None:
     documents = [
         create_document("source-1", "Evidence one."),
         create_document("source-2", "Evidence two."),
@@ -127,7 +129,71 @@ def test_missing_source_grade_is_rejected() -> None:
         }
     )
 
-    with pytest.raises(ValueError, match="omitted source IDs"):
+    grade_index = validate_grade_batch(grade_batch, documents)
+
+    assert grade_index["source-1"] == ("correct", "Useful evidence.")
+    assert grade_index["source-2"] == ("ambiguous", UNGRADED_REASON)
+
+
+def test_truncated_and_hallucinated_source_ids_are_repaired() -> None:
+    documents = [
+        create_document("W4414588074-chunk-947e000f2c1a", "Evidence one."),
+        create_document("W4416076356-chunk-24ee52b5d860", "Evidence two."),
+    ]
+    grade_batch = DocumentGradeBatch.model_validate(
+        {
+            "grades": [
+                {
+                    # Last two characters dropped by the model.
+                    "source_id": "W4414588074-chunk-947e000f2c",
+                    "grade": "correct",
+                    "reason": "Useful evidence.",
+                },
+                {
+                    # Extra character added by the model.
+                    "source_id": "W4416076356-chunk-24ee52b5d860a",
+                    "grade": "incorrect",
+                    "reason": "Unrelated.",
+                },
+                {
+                    "source_id": "W9999999999-chunk-000000000000",
+                    "grade": "correct",
+                    "reason": "Does not exist.",
+                },
+            ]
+        }
+    )
+
+    grade_index = validate_grade_batch(grade_batch, documents)
+
+    assert grade_index == {
+        "W4414588074-chunk-947e000f2c1a": ("correct", "Useful evidence."),
+        "W4416076356-chunk-24ee52b5d860": ("incorrect", "Unrelated."),
+    }
+
+
+def test_prefix_shared_by_two_chunks_is_not_guessed() -> None:
+    expected = {"W1-chunk-aaaa1111", "W1-chunk-aaaa2222"}
+
+    assert resolve_source_id("W1-chunk-aaaa", expected) is None
+    assert resolve_source_id("W1-chunk-aaaa1111", expected) == "W1-chunk-aaaa1111"
+
+
+def test_batch_matching_no_source_is_rejected() -> None:
+    documents = [create_document("source-1", "Evidence one.")]
+    grade_batch = DocumentGradeBatch.model_validate(
+        {
+            "grades": [
+                {
+                    "source_id": "something-else-entirely",
+                    "grade": "correct",
+                    "reason": "Wrong chunk.",
+                }
+            ]
+        }
+    )
+
+    with pytest.raises(ValueError, match="no grade for any supplied source ID"):
         validate_grade_batch(grade_batch, documents)
 
 

@@ -1,7 +1,13 @@
 import asyncio
 
 from agentic_rag.evaluation.models import EvaluationExample, PipelineOutput
-from agentic_rag.evaluation.ragas_evaluator import RagasEvaluator
+import pytest
+
+from agentic_rag.evaluation.ragas_evaluator import (
+    DEFAULT_JUDGE_MAX_TOKENS,
+    RagasEvaluator,
+    judge_model_args,
+)
 
 
 class FakeMetricResult:
@@ -39,6 +45,17 @@ def make_output():
         retrieval_used=True,
         final_status="accepted",
     )
+
+
+def test_judge_model_args_raise_the_default_token_budget():
+    assert judge_model_args({}) == {
+        "max_tokens": DEFAULT_JUDGE_MAX_TOKENS,
+        "temperature": 0.0,
+    }
+    assert judge_model_args({"judge_max_tokens": 8192})["max_tokens"] == 8192
+
+    with pytest.raises(ValueError, match="judge_max_tokens"):
+        judge_model_args({"judge_max_tokens": 0})
 
 
 def test_ragas_evaluator_scores_all_static_metrics_without_network():

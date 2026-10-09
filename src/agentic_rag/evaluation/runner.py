@@ -11,6 +11,7 @@ from agentic_rag.evaluation.models import (
     EvaluationRecord,
     EvaluationReport,
     PipelineSummary,
+    RagasScores,
 )
 from agentic_rag.evaluation.pipelines import EvaluationPipelineRunner
 from agentic_rag.evaluation.ragas_evaluator import RagasEvaluator
@@ -194,6 +195,43 @@ def record_needs_ragas(record: EvaluationRecord) -> bool:
 
     values = record.ragas.model_dump(exclude={"errors"}).values()
     return bool(record.ragas.errors) and all(value is None for value in values)
+
+
+def missing_ragas_metrics(
+    record: EvaluationRecord,
+    metric_names: list[str],
+) -> list[str]:
+    """Return the configured metrics this record still has to be judged on.
+
+    A record without scores needs every metric. A record that was scored but
+    lost some metrics to judge errors (for example a truncated faithfulness
+    response) needs only those, so rescoring costs one call per gap rather
+    than a full re-judgement.
+    """
+
+    if record.output.error or not record.output.answer.strip():
+        return []
+    if record.ragas is None:
+        return list(metric_names)
+
+    return [name for name in metric_names if name in record.ragas.errors]
+
+
+def merge_ragas_scores(existing: RagasScores | None, update: RagasScores) -> RagasScores:
+    """Overlay freshly judged metrics on saved scores, clearing fixed errors."""
+
+    if existing is None:
+        return update
+
+    merged = existing.model_copy(deep=True)
+
+    for name, value in update.model_dump(exclude={"errors"}).items():
+        if value is not None:
+            setattr(merged, name, value)
+            merged.errors.pop(name, None)
+
+    merged.errors.update(update.errors)
+    return merged
 
 
 def _mean(values: list[float]) -> float | None:

@@ -121,11 +121,51 @@ def grading_output_tokens(document_count: int) -> int:
     return GRADE_BATCH_BASE_TOKENS + TOKENS_PER_GRADE_ITEM * document_count
 
 
+UNGRADED_REASON = "The grader returned no grade for this chunk; kept for the context check."
+
+
+def resolve_source_id(
+    returned_id: str,
+    expected_source_ids: set[str],
+) -> str | None:
+    """Map a grader-returned ID onto the real chunk ID it refers to.
+
+    Models sometimes drop the last characters of a long chunk ID or add a
+    stray suffix. Accept the ID when exactly one real ID is a prefix match
+    in either direction; return None when it matches nothing or is ambiguous.
+    """
+
+    clean_id = returned_id.strip()
+
+    if clean_id in expected_source_ids:
+        return clean_id
+
+    if len(clean_id) < 8:
+        return None
+
+    candidates = [
+        source_id
+        for source_id in expected_source_ids
+        if source_id.startswith(clean_id) or clean_id.startswith(source_id)
+    ]
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    return None
+
+
 def validate_grade_batch(
     grade_batch: DocumentGradeBatch,
     documents: list[EvidenceDocument],
 ) -> dict[str, tuple[str, str]]:
-    """Require exactly one grade for every retrieved source ID."""
+    """Return one grade per retrieved source ID, repairing grader slips.
+
+    Truncated IDs are matched to the real chunk, hallucinated IDs are
+    ignored, and an ungraded chunk is kept as ambiguous. Only a batch that
+    matches none of the supplied chunks is rejected, because that means the
+    grader did not grade this evidence at all.
+    """
 
     expected_source_ids: set[str] = set()
 
@@ -135,25 +175,21 @@ def validate_grade_batch(
     grade_index: dict[str, tuple[str, str]] = {}
 
     for grade_item in grade_batch.grades:
-        source_id = grade_item.source_id
+        source_id = resolve_source_id(grade_item.source_id, expected_source_ids)
 
-        if source_id not in expected_source_ids:
-            raise ValueError("Document grader returned an unknown source ID: " + source_id)
-
-        if source_id in grade_index:
-            raise ValueError("Document grader returned a duplicate source ID: " + source_id)
+        if source_id is None or source_id in grade_index:
+            continue
 
         grade_index[source_id] = (
             grade_item.grade,
             grade_item.reason,
         )
 
-    missing_source_ids = expected_source_ids.difference(grade_index.keys())
+    if not grade_index:
+        raise ValueError("Document grader returned no grade for any supplied source ID.")
 
-    if missing_source_ids:
-        missing_text = ", ".join(sorted(missing_source_ids))
-
-        raise ValueError("Document grader omitted source IDs: " + missing_text)
+    for source_id in expected_source_ids.difference(grade_index.keys()):
+        grade_index[source_id] = ("ambiguous", UNGRADED_REASON)
 
     return grade_index
 
