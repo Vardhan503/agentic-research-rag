@@ -57,6 +57,9 @@ Set needs_more_context to true only when evidence required for a complete answer
 is genuinely absent. Set it to false when the existing evidence is sufficient
 but the answer merely needs rewriting.
 
+If the question assumes a fact the evidence contradicts, useful is true only
+when the answer names that error and answers from the evidence.
+
 When useful is true, improvement_feedback must be empty.
 """.strip()
 

@@ -34,6 +34,10 @@ class AgenticRAGState(TypedDict, total=False):
     answer: str
     source_ids: list[str]
     citations: list[dict[str, Any]]
+    # Last answer that passed the grounding check. Kept so a later failed
+    # regeneration does not throw away a usable CRAG-correct draft.
+    best_grounded_answer: str
+    best_grounded_source_ids: list[str]
 
     generation_count: int
     grounded: bool
@@ -76,6 +80,8 @@ def create_initial_state(question: str) -> AgenticRAGState:
         answer="",
         source_ids=[],
         citations=[],
+        best_grounded_answer="",
+        best_grounded_source_ids=[],
         generation_count=0,
         grounded=False,
         useful=False,

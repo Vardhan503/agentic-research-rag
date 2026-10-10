@@ -28,6 +28,9 @@ Rules:
 - Every Source ID listed in source_ids must also be cited in the answer.
 - source_ids must contain at least one Source ID.
 - Prefer evidence from several papers when the question asks for a comparison.
+- If the question assumes a fact the evidence contradicts or does not support
+  (a method a paper does not use, a threshold that belongs to a different
+  system), name the false premise and answer from the evidence.
 - Clearly state when the evidence is insufficient.
 - Keep the answer focused, readable, and scientifically cautious.
 """.strip()

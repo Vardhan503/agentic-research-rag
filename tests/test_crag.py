@@ -6,6 +6,7 @@ import pytest
 
 from agentic_rag.graph.crag import (
     UNGRADED_REASON,
+    any_document_in_time_window,
     assess_combined_context,
     grade_documents,
     resolve_source_id,
@@ -295,3 +296,44 @@ def test_incomplete_context_routes_ambiguous() -> None:
 
     assert result.route == "ambiguous"
     assert "corrected" in result.missing_information
+
+
+def test_time_window_overrides_llm_and_skips_context_call() -> None:
+    document = create_document("source-1", "Agentic RAG for time series analysis.")
+    document.published_date = "2024-08-18"
+    grading_response = """
+    {
+      "grades": [
+        {
+          "source_id": "source-1",
+          "grade": "correct",
+          "reason": "It discusses agentic RAG."
+        }
+      ]
+    }
+    """
+    llm, client = create_llm([grading_response])
+
+    result = run_crag_assessment(
+        question="What agentic RAG research was published in the last seven days?",
+        documents=[document],
+        llm=llm,
+        recent_days=7,
+        today=date(2026, 10, 10),
+    )
+
+    assert result.route == "incorrect"
+    assert result.context_status == "irrelevant"
+    assert "2026-10-03" in result.missing_information
+    assert client.call_count == 1
+
+
+def test_date_filtered_web_result_counts_as_inside_window() -> None:
+    document = create_document("web-1", "A new agentic RAG method.")
+    document.source = "web"
+    document.section_heading = "Web search result filtered to pages published 2026-10-03 to 2026-10-10"
+
+    assert any_document_in_time_window([document], 7, date(2026, 10, 10)) is True
+    old = create_document("old", "Old paper.")
+    old.published_date = "2024-08-18"
+    assert any_document_in_time_window([old], 7, date(2026, 10, 10)) is False

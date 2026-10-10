@@ -119,22 +119,25 @@ procedure, metric definitions and how to extend the benchmark.
 
 ### Results
 
-Last full run on the original 50 questions, `gpt-4.1-mini` for generation and
-judging. Retrieval metrics in that run covered only 4 hand-labelled questions;
-the benchmark now carries gold for all 64 static retrieval questions plus 21
-harder questions, so the next run will report them over the whole set.
+Full 71-question run (50 original + 21 hard), 284 pipeline-question pairs,
+`gpt-4.1-mini` for generation and judging. Retrieval metrics now cover all 64
+gold-labelled questions. Zero pipeline crashes after the grader ID repair.
 
 | Pipeline | Success | Faithfulness | Answer relevancy | Context recall | Factual correctness | Latency (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| baseline | 1.00 | 0.79 | 0.93 | 0.75 | 0.48 | 4.4 |
-| crag | 0.90 | 0.83 | 0.93 | 0.77 | 0.45 | 10.9 |
-| crag_web | 0.94 | 0.80 | 0.93 | 0.80 | 0.42 | 11.0 |
-| agentic | 0.98 | 0.83 | 0.95 | 0.85 | 0.46 | 15.2 |
+| baseline | 0.99 | 0.80 | 0.90 | 0.75 | 0.48 | 3.4 |
+| crag | 0.93 | 0.86 | 0.87 | 0.76 | 0.48 | 8.6 |
+| crag_web | 0.99 | 0.86 | 0.91 | 0.80 | 0.49 | 8.9 |
+| agentic | 0.97 | 0.82 | 0.88 | 0.79 | 0.48 | 13.0 |
 
-Reading: the agentic graph has the best grounding and context recall, at about
-3.5x the latency of the single-pass baseline. The original 50 questions were
-easy enough that the graph took the happy path on 45 of them, which is why the
-21 hard questions were added.
+`crag_web` is the best quality/cost trade-off on this set. The full agentic
+graph uniquely handles direct answers, out-of-corpus web questions, and
+unanswerable abstention, but Self-RAG over-abstained twice when CRAG had
+already marked the evidence sufficient. Those two cases now keep the grounded
+draft instead of wiping it. Time-bound questions also hard-fail papers dated
+outside the asked window, so a 2024 corpus hit can no longer satisfy "last
+seven days". Re-run the hard slice after pulling these fixes; do not treat
+the table above as the post-fix numbers.
 
 ## Tests and lint
 

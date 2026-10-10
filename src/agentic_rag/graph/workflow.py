@@ -81,6 +81,18 @@ def mentions_time_window(question: str) -> bool:
     return TIME_WINDOW_PATTERN.search(question) is not None
 
 
+FRESH_SOURCE_PATTERN = re.compile(
+    r"after the (local )?corpus|corpus cutoff|\bretractions?\b",
+    re.IGNORECASE,
+)
+
+
+def mentions_fresh_sources(question: str) -> bool:
+    """Return True when the question asks for events after the local corpus."""
+
+    return FRESH_SOURCE_PATTERN.search(question) is not None
+
+
 DIRECT_ANSWER_SYSTEM_PROMPT = """
 You are a concise assistant.
 
@@ -197,6 +209,8 @@ class AgenticRAGNodes:
                     2000,
                 )
             ),
+            recent_days=state.get("recent_days"),
+            today=current_date(),
         )
 
         return {
@@ -355,7 +369,10 @@ class AgenticRAGNodes:
             "unsupported_claims": result.unsupported_claims,
         }
 
-        if not result.grounded:
+        if result.grounded:
+            update["best_grounded_answer"] = state.get("answer", "")
+            update["best_grounded_source_ids"] = list(state.get("source_ids", []))
+        else:
             update["improvement_feedback"] = hallucination_feedback(result)
 
         return update
@@ -416,12 +433,36 @@ class AgenticRAGNodes:
         self,
         state: AgenticRAGState,
     ) -> dict[str, Any]:
-        """Return a safe result after retrieval or retry limits are reached."""
+        """Return a safe result after retrieval or retry limits are reached.
 
-        if state.get("answer") and state.get("grounded", False):
+        When CRAG already judged the evidence sufficient, keep the best
+        grounded draft (or the last draft) instead of abstaining. Self-RAG
+        over-abstention on detail-008 and premise-001 came from throwing
+        those answers away after a failed usefulness check.
+        """
+
+        kept_answer = (state.get("best_grounded_answer") or "").strip()
+        kept_source_ids = list(state.get("best_grounded_source_ids") or [])
+        crag_correct = state.get("crag_route") == "correct"
+        last_answer = (state.get("answer") or "").strip()
+
+        if not kept_answer and crag_correct and last_answer and state.get("documents"):
+            kept_answer = last_answer
+            kept_source_ids = list(state.get("source_ids") or [])
+
+        if kept_answer:
+            documents = documents_from_state(state.get("documents", []))
+            citations = build_citations(
+                source_ids=kept_source_ids,
+                documents=documents,
+            )
+            citation_records = [citation.model_dump(mode="json") for citation in citations]
             return {
-                "final_status": "needs_more_context",
-                "needs_more_context": True,
+                "answer": kept_answer,
+                "source_ids": kept_source_ids,
+                "citations": citation_records,
+                "final_status": "accepted" if crag_correct else "needs_more_context",
+                "needs_more_context": not crag_correct,
             }
 
         return {
@@ -452,6 +493,11 @@ class AgenticRAGNodes:
         route = state.get("crag_route", "incorrect")
 
         if route == "correct":
+            if mentions_fresh_sources(state.get("question", "")) and self._web_search_available(
+                state
+            ):
+                return "web_search"
+
             return "generate_answer"
 
         maximum_rewrites = int(
@@ -511,6 +557,23 @@ class AgenticRAGNodes:
             return "end"
 
         if state.get("needs_more_context", False):
+            # CRAG already said the corpus is enough. A completeness nit
+            # should rewrite the answer, not jump to web (hop-004).
+            if state.get("crag_route") == "correct" and not mentions_fresh_sources(
+                state.get("question", "")
+            ):
+                maximum_generations = int(
+                    self.runtime.agent_config.get(
+                        "maximum_generation_attempts",
+                        2,
+                    )
+                )
+
+                if state.get("generation_count", 0) < maximum_generations:
+                    return "generate_answer"
+
+                return "fallback_answer"
+
             maximum_rewrites = int(
                 self.runtime.agent_config.get(
                     "maximum_rewrite_attempts",

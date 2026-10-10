@@ -107,3 +107,33 @@ def test_route_accuracy_detects_unnecessary_web_search():
     scores = score_deterministic_metrics(example, output)
 
     assert scores.route_accuracy == 0.5
+
+
+def test_forbidden_phrase_zeros_keyword_coverage():
+    example = EvaluationExample(
+        question_id="time-001",
+        question="What agentic RAG research was published in the last seven days?",
+        reference_answer="Only sources inside the last seven days count.",
+        category="web_fallback",
+        difficulty="hard",
+        must_contain=["seven days"],
+        must_not_contain=["2024-08-18", "Time Series Analysis"],
+    )
+    stale = PipelineOutput(
+        pipeline="baseline",
+        question_id="time-001",
+        answer=(
+            "Recent work published in the last seven days includes "
+            "Agentic Retrieval-Augmented Generation for Time Series Analysis (2024-08-18)."
+        ),
+        final_status="accepted",
+    )
+    honest = PipelineOutput(
+        pipeline="agentic",
+        question_id="time-001",
+        answer="No agentic RAG papers from the last seven days were confirmed.",
+        final_status="accepted",
+    )
+
+    assert score_deterministic_metrics(example, stale).keyword_coverage == pytest.approx(1 / 3)
+    assert score_deterministic_metrics(example, honest).keyword_coverage == 1.0

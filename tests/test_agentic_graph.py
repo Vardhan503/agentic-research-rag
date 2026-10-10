@@ -14,7 +14,12 @@ from agentic_rag.graph.schemas import (
 )
 from agentic_rag.graph.state import create_initial_state
 from agentic_rag.graph.web_search import WebSearchResult
-from agentic_rag.graph.workflow import build_agentic_rag_graph, mentions_time_window
+from agentic_rag.graph.workflow import (
+    AgenticRAGNodes,
+    build_agentic_rag_graph,
+    mentions_fresh_sources,
+    mentions_time_window,
+)
 
 
 class FakeLLM:
@@ -518,3 +523,53 @@ def test_time_bound_question_restricts_web_search_dates(
     assert result["recent_days"] == 7
     assert result["final_status"] == "accepted"
     assert web_search.date_filters == [{"start_date": "2026-10-01", "end_date": "2026-10-08"}]
+
+
+def test_fallback_keeps_a_crag_correct_answer() -> None:
+    nodes = AgenticRAGNodes(FakeRuntime(FakeLLM([])))
+    document = create_document()
+    result = nodes.fallback_answer(
+        {
+            "question": "What four hallucination types does RAGTruth annotate?",
+            "crag_route": "correct",
+            "answer": "A later ungrounded draft.",
+            "source_ids": ["source-1"],
+            "best_grounded_answer": (
+                "RAGTruth annotates Evident Conflict and Baseless Information among nearly 18,000 responses."
+            ),
+            "best_grounded_source_ids": ["source-1"],
+            "documents": [document.model_dump(mode="json")],
+            "grounded": False,
+        }
+    )
+
+    assert result["final_status"] == "accepted"
+    assert "Evident Conflict" in result["answer"]
+
+
+def test_critique_does_not_web_search_when_crag_said_correct() -> None:
+    nodes = AgenticRAGNodes(FakeRuntime(FakeLLM([])))
+    state = {
+        "question": "How do CRAG and Rewrite-Retrieve-Read build the search query?",
+        "useful": False,
+        "needs_more_context": True,
+        "crag_route": "correct",
+        "rewrite_count": 1,
+        "generation_count": 2,
+        "web_search_used": False,
+    }
+
+    assert nodes.route_after_critique(state) == "fallback_answer"
+
+
+def test_post_corpus_question_uses_web_even_when_crag_is_correct() -> None:
+    nodes = AgenticRAGNodes(FakeRuntime(FakeLLM([])))
+    state = {
+        "question": "Have any important retractions appeared after the local corpus was built?",
+        "crag_route": "correct",
+        "web_search_used": False,
+        "rewrite_count": 0,
+    }
+
+    assert mentions_fresh_sources(state["question"]) is True
+    assert nodes.route_after_grading(state) == "web_search"
