@@ -146,22 +146,30 @@ def citation_recall(example: EvaluationExample, output: PipelineOutput) -> float
     return len(relevant_ids.intersection(cited_ids)) / len(relevant_ids)
 
 
+def _answer_has_phrase(answer: str, phrase: str) -> bool:
+    clean_phrase = " ".join(phrase.lower().split())
+    pattern = r"(?<!\w)" + re.escape(clean_phrase) + r"(?!\w)"
+    return re.search(pattern, answer) is not None
+
+
 def keyword_coverage(
     example: EvaluationExample, output: PipelineOutput
 ) -> float | None:
-    """Check whether required concepts occur as complete, case-insensitive phrases."""
+    """Score required phrases present and forbidden phrases absent."""
 
-    if not example.must_contain:
+    if not example.must_contain and not example.must_not_contain:
         return None
 
     answer = " ".join(output.answer.lower().split())
-    matches = 0
+    parts: list[float] = []
+
     for phrase in example.must_contain:
-        clean_phrase = " ".join(phrase.lower().split())
-        pattern = r"(?<!\w)" + re.escape(clean_phrase) + r"(?!\w)"
-        if re.search(pattern, answer):
-            matches += 1
-    return matches / len(example.must_contain)
+        parts.append(1.0 if _answer_has_phrase(answer, phrase) else 0.0)
+
+    for phrase in example.must_not_contain:
+        parts.append(0.0 if _answer_has_phrase(answer, phrase) else 1.0)
+
+    return sum(parts) / len(parts)
 
 
 def route_accuracy(example: EvaluationExample, output: PipelineOutput) -> float:

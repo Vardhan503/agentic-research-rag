@@ -20,7 +20,9 @@ The deterministic metrics do not call an evaluator model:
 - `ndcg_at_k`: position-discounted ranked relevance.
 - `citation_validity`: cited chunks that were actually retrieved.
 - `citation_recall`: known relevant sources that were cited.
-- `keyword_coverage`: required benchmark concepts found in the answer.
+- `keyword_coverage`: required `must_contain` phrases found in the answer,
+  minus any `must_not_contain` phrases (used so a stale 2024 paper cannot
+  score fully on a "last seven days" question).
 - `route_accuracy`: correctness of retrieval and web-routing decisions.
 - `success`: a non-empty, error-free answer with an accepted terminal status.
   Questions marked `expects_abstention` count as successful only when the

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+import re
+from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -240,6 +241,70 @@ def grade_documents(
     return graded_documents
 
 
+ISO_DATE_PATTERN = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
+DATE_FILTERED_WEB_HEADING = "filtered to pages published"
+
+
+def parse_iso_date(value: str | None) -> date | None:
+    """Parse YYYY-MM-DD, ignoring a trailing time if one is present."""
+
+    if not value:
+        return None
+
+    match = ISO_DATE_PATTERN.match(value.strip())
+
+    if match is None:
+        return None
+
+    try:
+        return date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    except ValueError:
+        return None
+
+
+def document_falls_in_window(
+    document: EvidenceDocument,
+    start: date,
+    end: date,
+    recent_days: int,
+) -> bool:
+    """Return True when this chunk is dated inside the requested window.
+
+    A year alone cannot prove a paper is from the last week, so year-only
+    metadata counts only for windows of a year or longer. Web results that
+    Tavily already date-filtered are treated as inside the window.
+    """
+
+    published = parse_iso_date(document.published_date)
+
+    if published is not None:
+        return start <= published <= end
+
+    if document.source == "web" and DATE_FILTERED_WEB_HEADING in document.section_heading.lower():
+        return True
+
+    if document.publication_year is None or recent_days < 365:
+        return False
+
+    return start.year <= document.publication_year <= end.year
+
+
+def any_document_in_time_window(
+    documents: list[EvidenceDocument],
+    recent_days: int,
+    today: date,
+) -> bool:
+    """Return True when at least one chunk falls inside today minus recent_days."""
+
+    start = today - timedelta(days=int(recent_days))
+
+    for document in documents:
+        if document_falls_in_window(document, start, today, recent_days):
+            return True
+
+    return False
+
+
 def select_useful_documents(
     documents: list[EvidenceDocument],
 ) -> list[EvidenceDocument]:
@@ -315,6 +380,8 @@ def run_crag_assessment(
     llm: OllamaStructuredClient,
     maximum_grade_characters_per_document: int = 1600,
     maximum_context_characters_per_document: int = 2000,
+    recent_days: int | None = None,
+    today: date | None = None,
 ) -> CRAGAssessment:
     """Grade retrieved chunks and select the next CRAG action."""
 
@@ -345,11 +412,30 @@ def run_crag_assessment(
             missing_information=("Relevant scientific evidence for the question."),
         )
 
+    current_date = today or datetime.now(UTC).date()
+
+    if recent_days and not any_document_in_time_window(
+        selected_documents,
+        recent_days,
+        current_date,
+    ):
+        start = current_date - timedelta(days=int(recent_days))
+        window = start.isoformat() + " to " + current_date.isoformat()
+        return CRAGAssessment(
+            route="incorrect",
+            graded_documents=graded_documents,
+            selected_documents=selected_documents,
+            context_status="irrelevant",
+            context_reason=("No selected source is dated inside " + window + "."),
+            missing_information=("Sources published between " + window + "."),
+        )
+
     context_assessment = assess_combined_context(
         question=question,
         documents=selected_documents,
         llm=llm,
         maximum_characters_per_document=(maximum_context_characters_per_document),
+        today=current_date,
     )
 
     route = route_context_status(context_assessment.status)

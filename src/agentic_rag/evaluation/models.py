@@ -18,6 +18,9 @@ class EvaluationExample(BaseModel):
     expected_paper_ids: list[str] = Field(default_factory=list)
     expected_source_ids: list[str] = Field(default_factory=list)
     must_contain: list[str] = Field(default_factory=list)
+    # Phrases that must not appear. Used so a stale 2024 paper cannot score
+    # full keyword coverage on a "last seven days" question.
+    must_not_contain: list[str] = Field(default_factory=list)
     requires_retrieval: bool = True
     requires_web: bool = False
     # True for questions with no answer in any source: the correct outcome is
