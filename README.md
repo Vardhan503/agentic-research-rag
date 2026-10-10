@@ -1,6 +1,6 @@
 # Agentic Research RAG
 
-Question answering over 4,075 open-access papers on retrieval-augmented
+Question answering over 10,075 open-access papers on retrieval-augmented
 generation, information retrieval, LLM agents and hallucination detection.
 The system is a LangGraph graph that routes each question, retrieves with a
 hybrid dense + sparse index, grades the evidence (CRAG), rewrites the query or
