@@ -89,6 +89,31 @@ def test_unanswerable_question_counts_abstention_as_success():
     assert invented.success == 0.0
 
 
+def test_time_bound_question_accepts_an_answer_or_an_abstention():
+    example = EvaluationExample(
+        question_id="time-001",
+        question="What agentic RAG research was published in the last seven days?",
+        reference_answer="Name a source inside the window, or abstain.",
+        category="web_fallback",
+        difficulty="hard",
+        accepts_abstention=True,
+    )
+
+    def output(final_status: str) -> PipelineOutput:
+        return PipelineOutput(
+            pipeline="agentic",
+            question_id="time-001",
+            answer="There is not enough supported evidence to answer the question reliably.",
+            final_status=final_status,
+            retrieval_used=True,
+            web_search_used=True,
+        )
+
+    assert score_deterministic_metrics(example, output("insufficient_evidence")).success == 1.0
+    assert score_deterministic_metrics(example, output("accepted")).success == 1.0
+    assert score_deterministic_metrics(example, output("needs_more_context")).success == 0.0
+
+
 def test_route_accuracy_detects_unnecessary_web_search():
     example = EvaluationExample(
         question_id="q1",

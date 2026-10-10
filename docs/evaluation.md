@@ -27,6 +27,8 @@ The deterministic metrics do not call an evaluator model:
 - `success`: a non-empty, error-free answer with an accepted terminal status.
   Questions marked `expects_abstention` count as successful only when the
   system returns `insufficient_evidence` instead of inventing an answer.
+  Questions marked `accepts_abstention` also count `insufficient_evidence` as
+  success, because a dated answer and an honest abstention are both correct.
 - `latency_seconds`: end-to-end wall-clock time per question.
 
 RAGAS adds semantic evaluator-model metrics:

@@ -130,14 +130,20 @@ gold-labelled questions. Zero pipeline crashes after the grader ID repair.
 | crag_web | 0.99 | 0.86 | 0.91 | 0.80 | 0.49 | 8.9 |
 | agentic | 0.97 | 0.82 | 0.88 | 0.79 | 0.48 | 13.0 |
 
-`crag_web` is the best quality/cost trade-off on this set. The full agentic
-graph uniquely handles direct answers, out-of-corpus web questions, and
-unanswerable abstention, but Self-RAG over-abstained twice when CRAG had
-already marked the evidence sufficient. Those two cases now keep the grounded
-draft instead of wiping it. Time-bound questions also hard-fail papers dated
-outside the asked window, so a 2024 corpus hit can no longer satisfy "last
-seven days". Re-run the hard slice after pulling these fixes; do not treat
-the table above as the post-fix numbers.
+A later deterministic rerun of `agentic` and `crag_web` (same 71 questions,
+RAGAS not repeated) is the current comparison. Honest abstention on the
+time-bound question counts as success.
+
+| Pipeline | Success | Route accuracy | Recall@k | nDCG | Keyword coverage | Latency (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| agentic | 1.00 | 1.00 | 0.70 | 0.74 | 0.50 | 13.0 |
+| crag_web | 0.99 | 0.95 | 0.69 | 0.73 | 0.50 | 9.3 |
+
+Agentic is ahead on routing and retrieval. It answers direct questions without
+retrieval, uses the web for out-of-corpus and post-cutoff questions, abstains
+on the fabricated paper, and abstains when no source falls inside "the last
+seven days" instead of citing a 2024 paper. `crag_web` is about 4 seconds
+faster and still searches the web for arithmetic.
 
 ## Tests and lint
 

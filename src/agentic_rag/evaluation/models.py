@@ -26,6 +26,9 @@ class EvaluationExample(BaseModel):
     # True for questions with no answer in any source: the correct outcome is
     # a clear "insufficient evidence" rather than a confident answer.
     expects_abstention: bool = False
+    # True when either a dated answer or an honest abstention is acceptable,
+    # as with "what was published in the last seven days".
+    accepts_abstention: bool = False
     notes: str = ""
 
     @field_validator("question_id", "question", "reference_answer", "category")
