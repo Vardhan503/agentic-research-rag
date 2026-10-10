@@ -1,0 +1,51 @@
+evaluation:
+  benchmark_path: "data/benchmark/agentic_rag_evaluation.jsonl"
+  records_output: "data/benchmark/results/evaluation_records.jsonl"
+  report_output: "data/benchmark/results/evaluation_report.json"
+
+  # These four systems form an ablation study: each row adds another
+  # capability, making it possible to see what actually improves quality.
+  pipelines:
+    - baseline
+    - crag
+    - crag_web
+    - agentic
+
+  retrieval_k: 10
+  resume: true
+
+  ragas:
+    enabled: true
+    # "openai" judges with openai_model using OPENAI_API_KEY from .env.
+    # "ollama" judges with the local model and host below.
+    provider: "openai"
+    openai_model: "gpt-4.1-mini"
+
+    model: "qwen3:14b"
+    host: "http://localhost:11434"
+    api_key: "ollama"
+    timeout_seconds: 300
+
+    # Output budget for each judge call. RAGAS's default of 1024 truncates
+    # faithfulness on long cited answers and the metric is then skipped.
+    judge_max_tokens: 4096
+    judge_temperature: 0.0
+    embedding_model: "BAAI/bge-small-en-v1.5"
+    maximum_contexts: 5
+    maximum_context_characters: 2000
+
+    # One generated reverse-question keeps local evaluation practical.
+    # Change this to 3 for the slower publication-quality final run.
+    answer_relevancy_strictness: 1
+    metrics:
+      - faithfulness
+      - answer_relevancy
+      - context_precision
+      - context_recall
+      - factual_correctness
+
+  langsmith:
+    dataset_name: "agentic-rag-scientific-evaluation-v1"
+    description: >-
+      A versioned benchmark for baseline RAG, corrective RAG, web fallback,
+      and the complete scientific Agentic RAG graph.
