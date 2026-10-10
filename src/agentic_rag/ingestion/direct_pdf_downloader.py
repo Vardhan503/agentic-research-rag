@@ -50,7 +50,6 @@ def read_jsonl(path):
 
     with open(
         input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:

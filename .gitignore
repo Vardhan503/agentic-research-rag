@@ -47,9 +47,12 @@ data/processed/chunks/*
 data/processed/indexes/*
 !data/processed/indexes/.gitkeep
 
-# Benchmark artifacts
+# Benchmark artifacts: the versioned question set and its gold-label
+# judgments are tracked; run results are not.
 data/benchmark/*
 !data/benchmark/.gitkeep
+!data/benchmark/agentic_rag_evaluation.jsonl
+!data/benchmark/retrieval_judgments.jsonl
 
 # Vector / lexical indexes
 indexes/*

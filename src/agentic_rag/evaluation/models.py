@@ -20,6 +20,9 @@ class EvaluationExample(BaseModel):
     must_contain: list[str] = Field(default_factory=list)
     requires_retrieval: bool = True
     requires_web: bool = False
+    # True for questions with no answer in any source: the correct outcome is
+    # a clear "insufficient evidence" rather than a confident answer.
+    expects_abstention: bool = False
     notes: str = ""
 
     @field_validator("question_id", "question", "reference_answer", "category")

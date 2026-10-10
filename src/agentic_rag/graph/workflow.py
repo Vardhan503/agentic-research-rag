@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
@@ -67,6 +67,12 @@ TIME_WINDOW_PATTERN = re.compile(
     r"|\b\d+\s*(day|days|week|weeks|month|months|year|years)\b",
     re.IGNORECASE,
 )
+
+
+def current_date() -> date:
+    """Today's date in UTC; a function so tests can pin it."""
+
+    return datetime.now(UTC).date()
 
 
 def mentions_time_window(question: str) -> bool:
@@ -253,7 +259,7 @@ class AgenticRAGNodes:
         recent_days = state.get("recent_days")
 
         if recent_days:
-            end_date = date.today()
+            end_date = current_date()
             start_date = end_date - timedelta(days=int(recent_days))
             search_result = web_search.search(
                 web_query,

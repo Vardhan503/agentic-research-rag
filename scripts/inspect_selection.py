@@ -1,6 +1,5 @@
 import json
 
-
 RETAINED_PATH = "data/processed/corpus_test_selected.jsonl"
 
 AMBIGUOUS_PATH = "data/interim/corpus_test_ambiguous.jsonl"
@@ -13,7 +12,6 @@ def load_records(path):
 
     with open(
         path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:

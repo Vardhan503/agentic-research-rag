@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -110,7 +110,7 @@ def assemble_parsed_corpus(
 
     report = {
         "status": status,
-        "assembled_at": datetime.now(timezone.utc).isoformat(),
+        "assembled_at": datetime.now(UTC).isoformat(),
         "expected_papers": expected_papers,
         "parsed_jats_papers": jats_count,
         "parsed_tei_papers": tei_count,

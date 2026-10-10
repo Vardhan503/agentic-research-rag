@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "agentic-research-rag"
 version = "0.1.0"
 description = "Production-grade Agentic RAG system over scientific research papers"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 dependencies = [
     "requests>=2.32",
@@ -41,4 +41,24 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
+
+[tool.ruff.lint]
+# Pinned so CI results do not change when ruff's default rule set changes.
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "DTZ", "RUF", "PLC", "PLE", "PLW", "PERF"]
+ignore = [
+    # Nested ifs / manual list copies in the ingestion code read fine as written.
+    "SIM102",
+    "SIM113",
+    "PERF401",
+    "PERF402",
+    # Heavy optional dependencies (faiss, sentence-transformers, openai) are
+    # imported lazily inside the functions that need them.
+    "PLC0415",
+    # Long lines in prompts and test fixtures are wrapped by the formatter where it matters.
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Fakes in tests are allowed mutable class attributes and unused fixtures.
+"tests/*" = ["RUF012", "B011"]

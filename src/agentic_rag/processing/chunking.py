@@ -5,10 +5,9 @@ import re
 
 from agentic_rag.processing.models import (
     DocumentChunk,
-    ParsedPaper,
     PaperSection,
+    ParsedPaper,
 )
-
 
 TOKEN_PATTERN = re.compile(
     r"\w+|[^\w\s]",
@@ -146,7 +145,7 @@ def split_text(
             chunks.extend(oversized_chunks)
             continue
 
-        candidate_sentences = current_sentences + [clean_sentence]
+        candidate_sentences = [*current_sentences, clean_sentence]
         candidate_text = " ".join(candidate_sentences)
 
         if count_tokens(candidate_text) <= max_tokens:

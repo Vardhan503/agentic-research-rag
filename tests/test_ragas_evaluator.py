@@ -1,8 +1,8 @@
 import asyncio
 
-from agentic_rag.evaluation.models import EvaluationExample, PipelineOutput
 import pytest
 
+from agentic_rag.evaluation.models import EvaluationExample, PipelineOutput
 from agentic_rag.evaluation.ragas_evaluator import (
     DEFAULT_JUDGE_MAX_TOKENS,
     RagasEvaluator,

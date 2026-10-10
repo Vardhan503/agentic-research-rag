@@ -237,7 +237,7 @@ class RagasEvaluator:
                     contexts=contexts,
                 )
                 setattr(scores, metric_name, value)
-            except Exception as error:  # noqa: BLE001 - isolate metric failures
+            except Exception as error:
                 scores.errors[metric_name] = str(error)
 
         return scores

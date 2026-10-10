@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -198,7 +198,7 @@ def run_jats_extraction(
 
     report = {
         "status": "complete",
-        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "processed_at": datetime.now(UTC).isoformat(),
         "selected_jats_papers": selected_count,
         "successfully_parsed": len(parsed_records),
         "parse_failures": parse_failures,

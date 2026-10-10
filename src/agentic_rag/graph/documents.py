@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from collections.abc import Iterable
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -34,7 +35,7 @@ class EvidenceDocument(BaseModel):
     def from_retrieval_candidate(
         cls,
         candidate: RetrievalCandidate,
-    ) -> "EvidenceDocument":
+    ) -> EvidenceDocument:
         """Convert one hybrid-search result into graph evidence."""
 
         chunk = candidate.chunk
@@ -51,6 +52,7 @@ class EvidenceDocument(BaseModel):
             section_heading=chunk.section_heading,
             doi=chunk.doi,
             publication_year=chunk.publication_year,
+            published_date=chunk.publication_date,
             url=url,
             dense_score=candidate.dense_score,
             sparse_score=candidate.sparse_score,

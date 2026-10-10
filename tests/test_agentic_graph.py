@@ -507,8 +507,8 @@ def test_time_bound_question_restricts_web_search_dates(
         fake_assessment,
     )
     monkeypatch.setattr(
-        "agentic_rag.graph.workflow.date",
-        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 10, 8))}),
+        "agentic_rag.graph.workflow.current_date",
+        lambda: date(2026, 10, 8),
     )
     patch_successful_self_rag(monkeypatch)
 

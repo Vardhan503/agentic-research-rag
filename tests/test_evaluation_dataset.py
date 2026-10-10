@@ -48,11 +48,27 @@ def test_load_evaluation_dataset_rejects_duplicate_ids(tmp_path):
         load_evaluation_dataset(path)
 
 
-def test_committed_benchmark_contains_fifty_unique_questions():
+def test_committed_benchmark_is_complete_and_labelled():
     examples = load_evaluation_dataset("data/benchmark/agentic_rag_evaluation.jsonl")
-    identifiers = set()
-    for example in examples:
-        identifiers.add(example.question_id)
+    identifiers = {example.question_id for example in examples}
 
-    assert len(examples) == 50
-    assert len(identifiers) == 50
+    assert len(examples) == 71
+    assert len(identifiers) == 71
+
+    # Every static retrieval question carries retrieval gold, so recall, MRR
+    # and nDCG are computed over the whole benchmark rather than four items.
+    unlabelled = [
+        example.question_id
+        for example in examples
+        if example.requires_retrieval
+        and example.reference_mode == "static"
+        and not example.requires_web
+        and not example.expects_abstention
+        and not example.expected_paper_ids
+    ]
+    assert unlabelled == []
+
+    # The hard additions cover every graph branch.
+    categories = {example.category for example in examples}
+    assert {"multi_hop", "wrong_premise", "unanswerable", "web_fallback"} <= categories
+    assert any(example.expects_abstention for example in examples)

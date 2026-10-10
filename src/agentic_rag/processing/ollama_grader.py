@@ -1,12 +1,11 @@
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
 from ollama import Client
 from pydantic import BaseModel, Field, ValidationError
-
 
 SYSTEM_PROMPT = """
 You are a strict research-paper screener building a high-precision corpus about
@@ -70,8 +69,7 @@ def reconstruct_abstract(inverted_index):
 
     for positions in inverted_index.values():
         for position in positions:
-            if position > largest_position:
-                largest_position = position
+            largest_position = max(largest_position, position)
 
     words = [""] * (largest_position + 1)
 
@@ -229,7 +227,7 @@ def add_grade_to_paper(paper, grade, route, model_name):
         "relevance_score": grade.relevance_score,
         "reason": grade.reason,
         "route": route,
-        "graded_at": datetime.now(timezone.utc).isoformat(),
+        "graded_at": datetime.now(UTC).isoformat(),
     }
 
     return graded_paper
@@ -242,7 +240,7 @@ def read_jsonl(path):
     if not input_path.exists():
         return records
 
-    with open(input_path, "r", encoding="utf-8") as input_file:
+    with open(input_path, encoding="utf-8") as input_file:
         for line in input_file:
             stripped_line = line.strip()
 
@@ -304,7 +302,7 @@ def write_checkpoint(grading_config, processed_count, total_selected):
         "model": grading_config["model"],
         "processed": processed_count,
         "total_selected": total_selected,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
 
     write_json(checkpoint, grading_config["checkpoint_path"])
@@ -340,7 +338,7 @@ def read_selection_counts(grading_config):
     if not report_path.exists():
         return 0, 0
 
-    with open(report_path, "r", encoding="utf-8") as report_file:
+    with open(report_path, encoding="utf-8") as report_file:
         report = json.load(report_file)
 
     retained = int(report.get("retained", 0))

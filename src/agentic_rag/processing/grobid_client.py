@@ -7,7 +7,6 @@ from typing import Any
 
 import requests
 
-
 RETRYABLE_STATUS_CODES = {
     429,
     500,

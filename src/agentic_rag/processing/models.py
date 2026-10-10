@@ -82,6 +82,10 @@ class DocumentChunk(BaseModel):
     title: str
     doi: str | None = None
     publication_year: int | None = None
+    # ISO date (YYYY-MM-DD) when known. Not stored in the index; the
+    # retriever fills it from paper metadata so time-bound questions can be
+    # judged at day resolution.
+    publication_date: str | None = None
 
     section_id: str
     section_heading: str

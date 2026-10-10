@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -125,13 +125,10 @@ def chunk_corpus_file(
                 total_chunks += 1
                 total_token_count += chunk.token_count
 
-                if minimum_token_count is None:
-                    minimum_token_count = chunk.token_count
-                elif chunk.token_count < minimum_token_count:
+                if minimum_token_count is None or chunk.token_count < minimum_token_count:
                     minimum_token_count = chunk.token_count
 
-                if chunk.token_count > maximum_token_count:
-                    maximum_token_count = chunk.token_count
+                maximum_token_count = max(maximum_token_count, chunk.token_count)
 
                 if chunk.token_count < small_chunk_threshold:
                     small_chunks += 1
@@ -170,7 +167,7 @@ def chunk_corpus_file(
 
     report = {
         "status": "complete",
-        "chunked_at": datetime.now(timezone.utc).isoformat(),
+        "chunked_at": datetime.now(UTC).isoformat(),
         "input_papers": len(paper_records),
         "papers_processed": papers_processed,
         "papers_with_chunks": papers_with_chunks,

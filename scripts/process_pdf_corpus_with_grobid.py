@@ -1,7 +1,7 @@
 import argparse
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -231,7 +231,7 @@ def main() -> None:
                 "tei_path": str(tei_path),
                 "status": "recovered_existing",
                 "validation": existing_reason,
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             }
 
             append_jsonl(manifest_path, manifest_record)
@@ -255,7 +255,7 @@ def main() -> None:
                 "status": "success",
                 "tei_bytes": result["tei_bytes"],
                 "attempts": result["attempts"],
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             }
 
             append_jsonl(manifest_path, manifest_record)
@@ -277,7 +277,7 @@ def main() -> None:
                 "tei_path": str(tei_path),
                 "status": "failed",
                 "error": str(error),
-                "failed_at": datetime.now(timezone.utc).isoformat(),
+                "failed_at": datetime.now(UTC).isoformat(),
             }
 
             failure_map[work_id] = failure_record
@@ -312,7 +312,7 @@ def main() -> None:
 
     report = {
         "status": status,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "grobid_version": grobid_version,
         "total_pdf_candidates": len(pdf_records),
         "completed_pdf_papers": completed_candidates,

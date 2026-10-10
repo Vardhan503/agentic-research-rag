@@ -1,13 +1,12 @@
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from agentic_rag.ingestion.openalex_client import (
     OpenAlexClient,
     normalize_work_id,
 )
-
 
 ENRICHMENT_FIELDS = [
     "id",
@@ -28,7 +27,6 @@ def read_jsonl(path):
 
     with open(
         input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:
@@ -168,7 +166,7 @@ def merge_oa_location_data(
 
     enriched_paper["oa_location_enrichment"] = {
         "source": "openalex_singleton",
-        "enriched_at": datetime.now(timezone.utc).isoformat(),
+        "enriched_at": datetime.now(UTC).isoformat(),
     }
 
     enriched_paper["oa_pdf_urls"] = collect_oa_pdf_urls(enriched_paper)
@@ -238,7 +236,7 @@ def create_enrichment_report(
         "with_any_oa_pdf": (with_any_oa_pdf),
         "without_direct_oa_pdf": (total_enriched - with_any_oa_pdf),
         "failures_this_run": len(failures),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
 
     write_json(

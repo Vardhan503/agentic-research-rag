@@ -215,7 +215,6 @@ def deduplicate_candidates(
 
     with open(
         raw_input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:
@@ -264,9 +263,7 @@ def deduplicate_candidates(
         "w",
         encoding="utf-8",
     ) as output_file:
-        for paper_id in candidates:
-            candidate = candidates[paper_id]
-
+        for candidate in candidates.values():
             candidate["query_match_count"] = len(candidate["matched_queries"])
 
             json.dump(
@@ -317,7 +314,6 @@ def create_discovery_report(
 
     with open(
         unique_input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:

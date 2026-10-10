@@ -12,7 +12,6 @@ from agentic_rag.processing.ollama_grader import (
     route_grade,
 )
 
-
 POSITIVE_TITLE_TERMS = [
     "retrieval-augmented generation",
     "retrieval augmented generation",
@@ -40,11 +39,7 @@ def resolve_project_path(path_value):
 def title_matches(title):
     normalized_title = title.lower()
 
-    for term in POSITIVE_TITLE_TERMS:
-        if term in normalized_title:
-            return True
-
-    return False
+    return any(term in normalized_title for term in POSITIVE_TITLE_TERMS)
 
 
 def collect_positive_candidates(paths, limit):

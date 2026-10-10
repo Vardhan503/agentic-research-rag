@@ -3,10 +3,9 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
 
 OPENALEX_ID_PATTERN = re.compile(r"W\d+", re.IGNORECASE)
 
@@ -438,7 +437,7 @@ def audit_local_corpus(
 
     report = {
         "status": "complete",
-        "audited_at": datetime.now(timezone.utc).isoformat(),
+        "audited_at": datetime.now(UTC).isoformat(),
         "expected_papers": len(corpus_records),
         "unique_openalex_ids": len(final_work_ids),
         "papers_without_work_id": papers_without_work_id,

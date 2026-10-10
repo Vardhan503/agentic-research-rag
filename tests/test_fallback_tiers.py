@@ -23,7 +23,6 @@ from agentic_rag.ingestion.openalex_content import (
     redact_api_key,
 )
 
-
 PDF_BYTES = b"%PDF-1.4\n" + (b"valid-pdf-content" * 20)
 
 TEI_BYTES = (

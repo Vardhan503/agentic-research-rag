@@ -1,9 +1,9 @@
-import time
 import re
+import time
+
 import requests
 
 from agentic_rag.config import get_openalex_api_key
-
 
 BASE_URL = "https://api.openalex.org"
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -287,7 +287,7 @@ def build_retrieval_indexes(
 
     report = {
         "status": status,
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "built_at": datetime.now(UTC).isoformat(),
         "input_chunks": input_chunks,
         "indexed_chunks": indexed_chunks,
         "filtered_small_chunks": filtered_small_chunks,

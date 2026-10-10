@@ -1,7 +1,8 @@
 # Agentic RAG evaluation
 
-This evaluation compares four systems on the same versioned 50-question test
-set:
+This evaluation compares four systems on the same versioned 71-question test
+set (50 original questions plus 21 hard ones: deep-detail, multi-hop,
+wrong-premise, time-bound, out-of-corpus and unanswerable):
 
 1. `baseline`: retrieve once and generate once.
 2. `crag`: grade evidence and rewrite weak retrieval before generation.
@@ -22,6 +23,8 @@ The deterministic metrics do not call an evaluator model:
 - `keyword_coverage`: required benchmark concepts found in the answer.
 - `route_accuracy`: correctness of retrieval and web-routing decisions.
 - `success`: a non-empty, error-free answer with an accepted terminal status.
+  Questions marked `expects_abstention` count as successful only when the
+  system returns `insufficient_evidence` instead of inventing an answer.
 - `latency_seconds`: end-to-end wall-clock time per question.
 
 RAGAS adds semantic evaluator-model metrics:
@@ -99,24 +102,39 @@ For the slowest, publication-quality answer-relevancy score, change
 `answer_relevancy_strictness` from `1` to `3` in `configs/evaluation.yaml`, use a
 new results path, and rerun the experiment.
 
-## Curate retrieval gold labels
+## Retrieval gold labels
 
-Most benchmark questions intentionally have empty expected IDs. Retrieval
-metrics remain `null` for those questions until a human labels the candidates;
-this is safer than treating unjudged results as irrelevant.
+Every static retrieval question carries `expected_paper_ids`, so
+`recall_at_k`, `reciprocal_rank` and `ndcg_at_k` are computed over the whole
+benchmark. Labels come from two sources:
 
-Export a candidate pool:
+1. Hand-picked anchor papers for the 21 hard questions (the paper the
+   reference answer was written from).
+2. Pooled judging for the original 50 questions: the hybrid retriever's top-20
+   chunks are judged chunk by chunk by `gpt-4.1-mini`, which sees the question
+   *and the reference answer* and must say whether the chunk supports that
+   answer. A paper is relevant when any of its chunks is. The judgments and the
+   judge's one-line reasons are committed in
+   `data/benchmark/retrieval_judgments.jsonl` for review.
+
+Pooled labels only cover papers the retriever can already find, so `recall_at_k`
+is an upper bound and the ranking metrics (`reciprocal_rank`, `ndcg_at_k`)
+are the more trustworthy comparison between pipelines.
+
+Regenerate or extend the labels after changing the benchmark:
 
 ```bash
-python scripts/export_retrieval_judgments.py --top-k 20
+# Judge only questions that have no saved judgment, then merge into the benchmark.
+python scripts/judge_retrieval_candidates.py --reuse --apply
+
+# Re-judge everything from scratch (about 50 judge calls).
+python scripts/judge_retrieval_candidates.py --apply
 ```
 
-For every candidate in
-`data/benchmark/retrieval_judgment_candidates.jsonl`, set `relevant` to `true`
-or `false`. Copy the relevant `paper_id` and, where chunk-level judgment is
-possible, `source_id` values into the corresponding benchmark record. Then run
-the evaluation into a new results path so retrieval metrics represent the
-frozen gold labels.
+`--apply` unions the pooled relevant papers with any existing
+`expected_paper_ids` and appends a provenance note to the question's `notes`.
+Questions with `requires_retrieval: false` or `reference_mode: dynamic` are
+skipped.
 
 ## Optional LangSmith tracing and dataset upload
 

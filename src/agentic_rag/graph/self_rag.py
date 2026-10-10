@@ -21,7 +21,6 @@ from agentic_rag.graph.schemas import (
 )
 from agentic_rag.llm.ollama_client import OllamaStructuredClient
 
-
 HALLUCINATION_CHECKER_SYSTEM_PROMPT = """
 You are the grounding verifier in a scientific Self-RAG system.
 

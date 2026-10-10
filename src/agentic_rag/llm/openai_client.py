@@ -7,11 +7,10 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
 
 
-def truncate_overlong_strings(
+def truncate_overlong_strings[ResponseModel: BaseModel](
     content: str,
     response_model: type[ResponseModel],
 ) -> ResponseModel:
@@ -108,7 +107,7 @@ class OpenAIStructuredClient:
         cls,
         config: dict[str, Any],
         client: Any | None = None,
-    ) -> "OpenAIStructuredClient":
+    ) -> OpenAIStructuredClient:
         """Create the client from the agentic_rag YAML section."""
 
         return cls(

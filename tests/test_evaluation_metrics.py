@@ -59,6 +59,36 @@ def test_deterministic_scores_cover_citations_keywords_routes_and_success():
     assert scores.success == 1.0
 
 
+def test_unanswerable_question_counts_abstention_as_success():
+    example = EvaluationExample(
+        question_id="q-fake",
+        question="What did the paper 'Quantum Banana Retrieval' conclude?",
+        reference_answer="No such paper exists; the system should abstain.",
+        category="unanswerable",
+        difficulty="hard",
+        expects_abstention=True,
+    )
+
+    def output(final_status: str, answer: str) -> PipelineOutput:
+        return PipelineOutput(
+            pipeline="agentic",
+            question_id="q-fake",
+            answer=answer,
+            final_status=final_status,
+            retrieval_used=True,
+        )
+
+    abstained = score_deterministic_metrics(
+        example, output("insufficient_evidence", "There is not enough supported evidence.")
+    )
+    invented = score_deterministic_metrics(
+        example, output("accepted", "The paper concluded ZB-17 is state of the art.")
+    )
+
+    assert abstained.success == 1.0
+    assert invented.success == 0.0
+
+
 def test_route_accuracy_detects_unnecessary_web_search():
     example = EvaluationExample(
         question_id="q1",

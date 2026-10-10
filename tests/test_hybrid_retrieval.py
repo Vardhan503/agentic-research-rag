@@ -20,6 +20,7 @@ from agentic_rag.retrieval.index_builder import (
 from agentic_rag.retrieval.models import (
     RetrievalCandidate,
 )
+from agentic_rag.retrieval.paper_dates import load_paper_dates
 
 
 class FakeEmbeddingModel:
@@ -276,6 +277,7 @@ def test_build_and_search_small_index(
         final_top_k=2,
         max_chunks_per_paper=2,
         embedding_model=FakeEmbeddingModel(),
+        paper_dates={"W1001": "2026-10-03"},
     )
 
     try:
@@ -302,3 +304,25 @@ def test_build_and_search_small_index(
     assert results
     assert results[0].chunk.chunk_id == "dense-chunk"
     assert all(threaded_results)
+
+    # The index stores only the year; the full date comes from paper metadata.
+    by_paper = {r.chunk.paper_id: r.chunk.publication_date for r in results}
+    assert by_paper["W1001"] == "2026-10-03"
+    assert by_paper.get("W1002") is None
+
+
+def test_load_paper_dates_reads_iso_dates_only(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "final_corpus.jsonl"
+    corpus_path.write_text(
+        "\n".join(
+            [
+                json.dumps({"id": "https://openalex.org/W1", "publication_date": "2026-10-03"}),
+                json.dumps({"id": "W2", "publication_date": "2025"}),
+                json.dumps({"id": "W3", "publication_date": None}),
+            ]
+        )
+        + "\n"
+    )
+
+    assert load_paper_dates(corpus_path) == {"W1": "2026-10-03"}
+    assert load_paper_dates(tmp_path / "missing.jsonl") == {}

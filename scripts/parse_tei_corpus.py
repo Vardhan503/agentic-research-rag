@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -137,7 +137,7 @@ def main() -> None:
 
     report = {
         "status": status,
-        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "processed_at": datetime.now(UTC).isoformat(),
         "pdf_candidates": pdf_candidates,
         "available_tei_files": available_tei,
         "missing_tei_files": missing_tei,

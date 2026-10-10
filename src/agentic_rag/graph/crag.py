@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -14,7 +14,6 @@ from agentic_rag.graph.schemas import (
     DocumentGradeBatch,
 )
 from agentic_rag.llm.ollama_client import OllamaStructuredClient
-
 
 DOCUMENT_GRADER_SYSTEM_PROMPT = """
 You are the document grader in a Corrective RAG system over scientific papers.
@@ -278,7 +277,7 @@ def assess_combined_context(
         maximum_characters_per_document=(maximum_characters_per_document),
     )
 
-    current_date = today or date.today()
+    current_date = today or datetime.now(UTC).date()
 
     prompt = (
         "Current date: "

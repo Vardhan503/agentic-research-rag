@@ -9,7 +9,7 @@ from agentic_rag.evaluation.ragas_runner import score_saved_records, write_recor
 
 
 class FakeRagasEvaluator:
-    metric_names = ["faithfulness", "answer_relevancy"]
+    metric_names = ("faithfulness", "answer_relevancy")
 
     def __init__(self):
         self.calls = 0

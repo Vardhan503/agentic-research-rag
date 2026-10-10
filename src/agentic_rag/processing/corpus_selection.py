@@ -2,7 +2,6 @@ import json
 from collections import Counter
 from pathlib import Path
 
-
 RELEVANCE_TERMS = {
     "retrieval augmented generation": 8,
     "retrieval-augmented generation": 8,
@@ -154,8 +153,7 @@ def reconstruct_abstract(inverted_index):
 
     for positions in inverted_index.values():
         for position in positions:
-            if position > largest_position:
-                largest_position = position
+            largest_position = max(largest_position, position)
 
     words = [""] * (largest_position + 1)
 
@@ -205,11 +203,7 @@ def build_metadata_text(paper):
 
 
 def contains_any(text, terms):
-    for term in terms:
-        if term in text:
-            return True
-
-    return False
+    return any(term in text for term in terms)
 
 
 def score_relevance(paper):
@@ -278,8 +272,7 @@ def score_relevance(paper):
         if score >= 8:
             score = 7
 
-    if score < 0:
-        score = 0
+    score = max(score, 0)
 
     matched_terms = []
 
@@ -448,7 +441,6 @@ def filter_candidates(
 
     with open(
         input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:

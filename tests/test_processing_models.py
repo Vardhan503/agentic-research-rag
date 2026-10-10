@@ -1,9 +1,6 @@
-from agentic_rag.processing.models import (
-    PaperSection,
-    ParsedPaper,
-)
 import pytest
 from pydantic import ValidationError
+
 from agentic_rag.processing.models import (
     DocumentChunk,
     PaperSection,

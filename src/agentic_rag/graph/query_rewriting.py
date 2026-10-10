@@ -17,7 +17,6 @@ from agentic_rag.graph.documents import (
 from agentic_rag.graph.schemas import RewrittenQuery
 from agentic_rag.llm.ollama_client import OllamaStructuredClient
 
-
 QUERY_REWRITER_SYSTEM_PROMPT = """
 You rewrite search queries for a scientific Corrective RAG system.
 

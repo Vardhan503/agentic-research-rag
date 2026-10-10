@@ -2,8 +2,9 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
 from agentic_rag.processing.ollama_grader import paper_key
 
 
@@ -16,7 +17,6 @@ def read_jsonl(path):
 
     with open(
         input_path,
-        "r",
         encoding="utf-8",
     ) as input_file:
         for line in input_file:
@@ -478,7 +478,7 @@ def assemble_final_corpus(
 
     report = {
         "status": status,
-        "assembled_at": datetime.now(timezone.utc).isoformat(),
+        "assembled_at": datetime.now(UTC).isoformat(),
         "ambiguous_grading_complete": (grading_complete),
         "screening_complete": (pipeline_status["screening_complete"]),
         "shortlist_grading_complete": (pipeline_status["shortlist_grading_complete"]),

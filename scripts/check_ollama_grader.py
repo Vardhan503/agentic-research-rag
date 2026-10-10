@@ -1,9 +1,7 @@
 from typing import Literal
 
 from ollama import chat
-from pydantic import BaseModel
-from pydantic import Field
-
+from pydantic import BaseModel, Field
 
 MODEL_NAME = "qwen3:4b-instruct"
 

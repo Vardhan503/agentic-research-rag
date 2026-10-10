@@ -277,7 +277,14 @@ retrieval:
   reranker_batch_size: 16
 
   final_top_k: 10
-  max_chunks_per_paper: 3
+  # 2 keeps one paper from filling a third of the context; the evaluation
+  # showed only 77% of retrieved chunks came from distinct papers at 3.
+  max_chunks_per_paper: 2
+
+  # Full publication dates are read from here at load time and attached to
+  # retrieved chunks, so time-bound questions can be judged by day without
+  # rebuilding the index.
+  paper_metadata_path: "data/processed/final_corpus.jsonl"
 
 agentic_rag:
   # "openai" uses openai_model with OPENAI_API_KEY from .env.
@@ -313,7 +320,9 @@ agentic_rag:
   maximum_accumulated_documents: 12
 
   retrieval_top_k: 10
-  maximum_rewrite_attempts: 2
+  # One rewrite, then web fallback. A second rewrite never changed the grade
+  # in the evaluation but doubled the latency of the correction path.
+  maximum_rewrite_attempts: 1
   maximum_generation_attempts: 2
 
 web_search:

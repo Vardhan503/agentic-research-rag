@@ -13,7 +13,6 @@ from agentic_rag.graph.documents import (
 from agentic_rag.graph.schemas import GeneratedAnswer
 from agentic_rag.llm.ollama_client import OllamaStructuredClient
 
-
 GENERATOR_SYSTEM_PROMPT = """
 You are a scientific research assistant using retrieval-augmented generation.
 

@@ -10,7 +10,6 @@ from agentic_rag.processing.ollama_grader import (
     create_ollama_client,
 )
 
-
 POSITIVE_CONTROLS = [
     {
         "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",

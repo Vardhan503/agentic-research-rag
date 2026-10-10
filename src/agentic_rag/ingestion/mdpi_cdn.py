@@ -1,6 +1,6 @@
+import contextlib
 import re
 from urllib.parse import urlparse
-
 
 MDPI_HOSTS = {
     "www.mdpi.com",
@@ -211,20 +211,17 @@ class MdpiSlugResolver:
                 )
             ).lower()
 
-            if content_type and "pdf" not in content_type and "octet-stream" not in content_type:
-                return False
-
-            return True
+            return not (
+                content_type and "pdf" not in content_type and "octet-stream" not in content_type
+            )
 
         except Exception:
             return False
 
         finally:
             if response is not None:
-                try:
+                with contextlib.suppress(Exception):
                     response.close()
-                except Exception:
-                    pass
 
     def resolve(self, paper, issn, volume, article):
         if issn in self.slug_by_issn:

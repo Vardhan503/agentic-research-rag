@@ -4,7 +4,6 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -34,7 +33,7 @@ def resolve_config_path(config_path=None):
 def load_corpus_config(config_path=None):
     path = resolve_config_path(config_path)
 
-    with open(path, "r", encoding="utf-8") as file:
+    with open(path, encoding="utf-8") as file:
         config = yaml.safe_load(file)
 
     return config

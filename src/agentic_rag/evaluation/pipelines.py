@@ -40,7 +40,7 @@ class EvaluationPipelineRunner:
                 output = self._run_agentic(example)
             else:
                 raise ValueError("Unsupported pipeline: " + pipeline)
-        except Exception as error:  # noqa: BLE001 - failures belong in results
+        except Exception as error:
             output = PipelineOutput(
                 pipeline=pipeline,
                 question_id=example.question_id,

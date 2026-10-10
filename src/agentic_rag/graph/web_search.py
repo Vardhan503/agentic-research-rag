@@ -117,7 +117,7 @@ class TavilyWebSearch:
         cls,
         config: dict[str, Any],
         client: Any | None = None,
-    ) -> "TavilyWebSearch":
+    ) -> TavilyWebSearch:
         """Create web search from the YAML configuration."""
 
         return cls(

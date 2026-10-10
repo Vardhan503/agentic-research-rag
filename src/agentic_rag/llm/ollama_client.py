@@ -6,7 +6,6 @@ from typing import Any, TypeVar
 from ollama import Client
 from pydantic import BaseModel
 
-
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
 
 
@@ -59,7 +58,7 @@ class OllamaStructuredClient:
         cls,
         config: dict[str, Any],
         client: Any | None = None,
-    ) -> "OllamaStructuredClient":
+    ) -> OllamaStructuredClient:
         """Create the client from the agentic_rag YAML section."""
 
         return cls(

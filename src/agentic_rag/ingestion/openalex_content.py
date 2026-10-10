@@ -16,7 +16,6 @@ from agentic_rag.ingestion.europe_pmc_fallback import (
     write_validated_xml,
 )
 
-
 OPENALEX_CONTENT_HOST = "content.openalex.org"
 
 DEFAULT_COST_USD = 0.01

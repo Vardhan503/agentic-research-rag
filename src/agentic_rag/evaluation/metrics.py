@@ -187,6 +187,10 @@ def score_deterministic_metrics(
         relevant = example.expected_paper_ids
 
     successful_statuses = {"accepted", "direct_answer", "complete"}
+    if example.expects_abstention:
+        # Inventing an answer to an unanswerable question is the failure here.
+        successful_statuses = {"insufficient_evidence"}
+
     success = 0.0
     if (
         output.answer.strip()

@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -13,7 +13,6 @@ from agentic_rag.processing.ollama_grader import (
     write_json,
     write_jsonl,
 )
-
 
 SYSTEM_PROMPT = """
 You are a conservative first-stage research-paper screener.
@@ -187,7 +186,7 @@ def add_screening_decision(
         "model": model_name,
         "decision": decision,
         "fallback_keep": fallback_keep,
-        "screened_at": datetime.now(timezone.utc).isoformat(),
+        "screened_at": datetime.now(UTC).isoformat(),
     }
 
     return screened_paper
@@ -296,7 +295,7 @@ def build_screening_outputs(screening_config):
         "fallback_kept": fallback_kept,
         "remaining_unscreened": remaining_unscreened,
         "screening_keep_rate": (len(shortlist) / screened_count if screened_count else 0.0),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
 
     write_json(

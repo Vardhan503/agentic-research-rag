@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from agentic_rag.evaluation.metrics import score_deterministic_metrics
@@ -337,7 +337,7 @@ def build_evaluation_report(
     status = "complete" if records_are_complete and ragas_is_complete else "partial"
     return EvaluationReport(
         status=status,
-        evaluated_at=datetime.now(timezone.utc).isoformat(),
+        evaluated_at=datetime.now(UTC).isoformat(),
         dataset_path=dataset_path,
         requested_pipelines=pipelines,
         total_examples=len(examples),

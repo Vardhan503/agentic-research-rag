@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 import sqlite3
 import threading
@@ -13,7 +12,6 @@ import numpy as np
 from agentic_rag.processing.models import DocumentChunk
 from agentic_rag.retrieval.models import RetrievalCandidate
 
-
 QUERY_TOKEN_PATTERN = re.compile(
     r"\w+",
     re.UNICODE,
@@ -23,17 +21,7 @@ QUERY_TOKEN_PATTERN = re.compile(
 # Common question words match nearly every chunk, so OR-ing them forces
 # FTS5 to score most of the index while adding almost no BM25 signal.
 QUERY_STOPWORDS = frozenset(
-    """
-    a about above after again against all also am an and any are as at be
-    because been before being below between both but by can could did do does
-    doing down during each either few for from further had has have having he
-    her here hers him his how i if in into is it its itself just me more most
-    my no nor not now of off on once only or other our ours out over own same
-    she should so some such than that the their theirs them then there these
-    they this those through to too under until up very was we were what when
-    where which while who whom why will with would you your yours
-    explain describe compare discuss list give tell show
-    """.split()
+    ["a", "about", "above", "after", "again", "against", "all", "also", "am", "an", "and", "any", "are", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "could", "did", "do", "does", "doing", "down", "during", "each", "either", "few", "for", "from", "further", "had", "has", "have", "having", "he", "her", "here", "hers", "him", "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself", "just", "me", "more", "most", "my", "no", "nor", "not", "now", "of", "off", "on", "once", "only", "or", "other", "our", "ours", "out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "theirs", "them", "then", "there", "these", "they", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "would", "you", "your", "yours", "explain", "describe", "compare", "discuss", "list", "give", "tell", "show"]
 )
 
 
@@ -200,8 +188,15 @@ class HybridRetriever:
         max_chunks_per_paper: int = 3,
         embedding_model: Any | None = None,
         reranker: Any | None = None,
+        paper_dates: dict[str, str] | None = None,
     ) -> None:
-        """Load indexes and retrieval models."""
+        """Load indexes and retrieval models.
+
+        paper_dates maps paper_id to an ISO publication date and is stamped
+        onto every loaded chunk, since the index itself only stores the year.
+        """
+
+        self.paper_dates = paper_dates or {}
 
         if not faiss_index_path.exists():
             raise FileNotFoundError(f"FAISS index not found: {faiss_index_path}")
@@ -281,7 +276,18 @@ class HybridRetriever:
         if row is None:
             return None
 
-        return DocumentChunk.model_validate_json(row[0])
+        return self._parse_chunk(row[0])
+
+    def _parse_chunk(self, chunk_json: str) -> DocumentChunk:
+        """Validate a stored chunk and attach its paper's publication date."""
+
+        chunk = DocumentChunk.model_validate_json(chunk_json)
+        publication_date = self.paper_dates.get(chunk.paper_id)
+
+        if publication_date and chunk.publication_date is None:
+            chunk.publication_date = publication_date
+
+        return chunk
 
     def dense_search(
         self,
@@ -370,7 +376,7 @@ class HybridRetriever:
         results: list[RetrievalCandidate] = []
 
         for chunk_json, raw_score in rows:
-            chunk = DocumentChunk.model_validate_json(chunk_json)
+            chunk = self._parse_chunk(chunk_json)
 
             candidate = RetrievalCandidate(
                 chunk=chunk,
