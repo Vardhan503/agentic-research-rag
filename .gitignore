@@ -5,9 +5,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-# LangGraph
-.langgraph_api/*
-
 # Virtual environments
 .venv/
 
@@ -40,19 +37,13 @@ data/interim/*
 # Processed datasets
 data/processed/papers/*
 !data/processed/papers/.gitkeep
-data/processed/*.json
-data/processed/*.jsonl
+
 data/processed/chunks/*
 !data/processed/chunks/.gitkeep
-data/processed/indexes/*
-!data/processed/indexes/.gitkeep
 
-# Benchmark artifacts: the versioned question set and its gold-label
-# judgments are tracked; run results are not.
+# Benchmark artifacts
 data/benchmark/*
 !data/benchmark/.gitkeep
-!data/benchmark/agentic_rag_evaluation.jsonl
-!data/benchmark/retrieval_judgments.jsonl
 
 # Vector / lexical indexes
 indexes/*
